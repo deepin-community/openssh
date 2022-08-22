@@ -1,0 +1,19 @@
+Description: Add UOS version for ssh version
+ 在ssh版本上增加UOS版本号
+Origin: https://gerrit.uniontech.com/plugins/gitiles/base/openssh/+/5f9f9930ad4e8f01a9c1b035ab1922498db679b1
+Last-Update: 2022-05-19
+
+--- openssh-9.0p1.orig/version.h
++++ openssh-9.0p1/version.h
+@@ -3,9 +3,10 @@
+ #define SSH_VERSION	"OpenSSH_9.0"
+ 
+ #define SSH_PORTABLE	"p1"
++#define UOS_VERSION  "UOS_Desktop_104*"
+ #define SSH_RELEASE_MINIMUM	SSH_VERSION SSH_PORTABLE
+ #ifdef SSH_EXTRAVERSION
+-#define SSH_RELEASE	SSH_RELEASE_MINIMUM " " SSH_EXTRAVERSION
++#define SSH_RELEASE	SSH_RELEASE_MINIMUM " " SSH_EXTRAVERSION " " UOS_VERSION
+ #else
+ #define SSH_RELEASE	SSH_RELEASE_MINIMUM
+ #endif

@@ -1,0 +1,39 @@
+From 62afaa06612ce758bc5e30def9bd054940981bae Mon Sep 17 00:00:00 2001
+From: Colin Watson <cjwatson@debian.org>
+Date: Tue, 15 Feb 2022 18:25:35 +0000
+Subject: Work around missing RSA SHA-2 signature support in conch
+
+This is fixed in Twisted upstream
+(https://twistedmatrix.com/trac/ticket/9765).  Work around this until
+the fix is in Debian.
+
+Forwarded: not-needed
+Last-Update: 2022-02-16
+
+Patch-Name: conch-ssh-rsa.patch
+---
+ regress/test-exec.sh | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/regress/test-exec.sh b/regress/test-exec.sh
+index 9fb02d1cb..a75ac033b 100644
+--- a/regress/test-exec.sh
++++ b/regress/test-exec.sh
+@@ -637,6 +637,17 @@ REGRESS_INTEROP_CONCH=no
+ if test -x "$CONCH" ; then
+ 	REGRESS_INTEROP_CONCH=yes
+ fi
++case "$SCRIPT" in
++*conch*)	;;
++*)		REGRESS_INTEROP_CONCH=no
++esac
++
++if test "$REGRESS_INTEROP_CONCH" = "yes" ; then
++	# Work around missing support for RSA SHA-2 signatures:
++	# https://twistedmatrix.com/trac/ticket/9765
++	echo HostKeyAlgorithms +ssh-rsa >> $OBJ/sshd_config
++	echo PubkeyAcceptedAlgorithms +ssh-rsa >> $OBJ/sshd_config
++fi
+ 
+ # If PuTTY is present, new enough and we are running a PuTTY test, prepare
+ # keys and configuration.
