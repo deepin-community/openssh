@@ -1,4 +1,4 @@
-From 57c7efa603b236e6f4429caddbe565c431249a17 Mon Sep 17 00:00:00 2001
+From 07b232eaa2b9236e66282d4f126f1023d41efc0e Mon Sep 17 00:00:00 2001
 From: Richard Kettlewell <rjk@greenend.org.uk>
 Date: Sun, 9 Feb 2014 16:09:52 +0000
 Subject: Various keepalive extensions
@@ -16,7 +16,7 @@ keepalives.
 Author: Ian Jackson <ian@chiark.greenend.org.uk>
 Author: Matthew Vernon <matthew@debian.org>
 Author: Colin Watson <cjwatson@debian.org>
-Last-Update: 2021-11-05
+Last-Update: 2023-12-18
 
 Patch-Name: keepalive-extensions.patch
 ---
@@ -26,27 +26,27 @@ Patch-Name: keepalive-extensions.patch
  3 files changed, 34 insertions(+), 4 deletions(-)
 
 diff --git a/readconf.c b/readconf.c
-index 0c268700a..785943642 100644
+index 93e431d71..bd2e78ab7 100644
 --- a/readconf.c
 +++ b/readconf.c
-@@ -178,6 +178,7 @@ typedef enum {
- 	oFingerprintHash, oUpdateHostkeys, oHostbasedAcceptedAlgorithms,
+@@ -182,6 +182,7 @@ typedef enum {
  	oPubkeyAcceptedAlgorithms, oCASignatureAlgorithms, oProxyJump,
- 	oSecurityKeyProvider, oKnownHostsCommand,
+ 	oSecurityKeyProvider, oKnownHostsCommand, oRequiredRSASize,
+ 	oEnableEscapeCommandline, oObscureKeystrokeTiming, oChannelTimeout,
 +	oProtocolKeepAlives, oSetupTimeOut,
  	oIgnore, oIgnoredUnknownOption, oDeprecated, oUnsupported
  } OpCodes;
  
-@@ -336,6 +337,8 @@ static struct {
- 	{ "proxyjump", oProxyJump },
- 	{ "securitykeyprovider", oSecurityKeyProvider },
- 	{ "knownhostscommand", oKnownHostsCommand },
+@@ -345,6 +346,8 @@ static struct {
+ 	{ "enableescapecommandline", oEnableEscapeCommandline },
+ 	{ "obscurekeystroketiming", oObscureKeystrokeTiming },
+ 	{ "channeltimeout", oChannelTimeout },
 +	{ "protocolkeepalives", oProtocolKeepAlives },
 +	{ "setuptimeout", oSetupTimeOut },
  
  	{ NULL, oBadOption }
  };
-@@ -1769,6 +1772,8 @@ parse_pubkey_algos:
+@@ -1867,6 +1870,8 @@ parse_pubkey_algos:
  		goto parse_flag;
  
  	case oServerAliveInterval:
@@ -55,7 +55,7 @@ index 0c268700a..785943642 100644
  		intptr = &options->server_alive_interval;
  		goto parse_time;
  
-@@ -2651,8 +2656,13 @@ fill_default_options(Options * options)
+@@ -2820,8 +2825,13 @@ fill_default_options(Options * options)
  		options->rekey_interval = 0;
  	if (options->verify_host_key_dns == -1)
  		options->verify_host_key_dns = 0;
@@ -72,10 +72,10 @@ index 0c268700a..785943642 100644
  		options->server_alive_count_max = 3;
  	if (options->control_master == -1)
 diff --git a/ssh_config.5 b/ssh_config.5
-index 07a295f5a..e8a1a37f0 100644
+index 7ca72aedf..25ccbed28 100644
 --- a/ssh_config.5
 +++ b/ssh_config.5
-@@ -275,9 +275,13 @@ If set to
+@@ -297,9 +297,13 @@ If set to
  .Cm yes ,
  user interaction such as password prompts and host key confirmation requests
  will be disabled.
@@ -90,7 +90,7 @@ index 07a295f5a..e8a1a37f0 100644
  The argument must be
  .Cm yes
  or
-@@ -1773,7 +1777,14 @@ from the server,
+@@ -1913,7 +1917,14 @@ from the server,
  will send a message through the encrypted
  channel to request a response from the server.
  The default
@@ -106,7 +106,7 @@ index 07a295f5a..e8a1a37f0 100644
  .It Cm SessionType
  May be used to either request invocation of a subsystem on the remote system,
  or to prevent the execution of a remote command at all.
-@@ -1887,6 +1898,12 @@ Specifies whether the system should send TCP keepalive messages to the
+@@ -2027,6 +2038,12 @@ Specifies whether the system should send TCP keepalive messages to the
  other side.
  If they are sent, death of the connection or crash of one
  of the machines will be properly noticed.
@@ -120,10 +120,10 @@ index 07a295f5a..e8a1a37f0 100644
  connections will die if the route is down temporarily, and some people
  find it annoying.
 diff --git a/sshd_config.5 b/sshd_config.5
-index b31725f03..83615a5d0 100644
+index d2f09de9b..5de2fd8cf 100644
 --- a/sshd_config.5
 +++ b/sshd_config.5
-@@ -1749,6 +1749,9 @@ This avoids infinitely hanging sessions.
+@@ -1842,6 +1842,9 @@ This avoids infinitely hanging sessions.
  .Pp
  To disable TCP keepalive messages, the value should be set to
  .Cm no .
