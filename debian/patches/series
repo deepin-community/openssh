@@ -25,3 +25,5 @@ revert-ipqos-defaults.patch
 maxhostnamelen.patch
 conch-ssh-rsa.patch
 systemd-socket-activation.patch
+deepin-ssh-connect-idle-timeout.patch
+deepin-ssh-keygen-privatekey-file-perm.patch
