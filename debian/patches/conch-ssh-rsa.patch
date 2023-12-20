@@ -1,14 +1,17 @@
-From 62afaa06612ce758bc5e30def9bd054940981bae Mon Sep 17 00:00:00 2001
+From df5489f19fc05621a5902490692de3245528d424 Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@debian.org>
 Date: Tue, 15 Feb 2022 18:25:35 +0000
-Subject: Work around missing RSA SHA-2 signature support in conch
+Subject: Work around RSA SHA-2 signature issues in conch
 
-This is fixed in Twisted upstream
-(https://twistedmatrix.com/trac/ticket/9765).  Work around this until
-the fix is in Debian.
+This was supposed to be fixed in Twisted upstream
+(https://twistedmatrix.com/trac/ticket/9765), and that fix is in Debian
+now.  However, regression tests still seem to fail in GitLab CI but not
+locally (see e.g.
+https://salsa.debian.org/ssh-team/openssh/-/jobs/3513178).  Leave this
+in place for now until we figure out what's wrong.
 
 Forwarded: not-needed
-Last-Update: 2022-02-16
+Last-Update: 2022-11-14
 
 Patch-Name: conch-ssh-rsa.patch
 ---
@@ -16,10 +19,10 @@ Patch-Name: conch-ssh-rsa.patch
  1 file changed, 11 insertions(+)
 
 diff --git a/regress/test-exec.sh b/regress/test-exec.sh
-index 9fb02d1cb..a75ac033b 100644
+index 603848683..09d91e3b8 100644
 --- a/regress/test-exec.sh
 +++ b/regress/test-exec.sh
-@@ -637,6 +637,17 @@ REGRESS_INTEROP_CONCH=no
+@@ -749,6 +749,17 @@ REGRESS_INTEROP_CONCH=no
  if test -x "$CONCH" ; then
  	REGRESS_INTEROP_CONCH=yes
  fi

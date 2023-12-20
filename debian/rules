@@ -65,6 +65,9 @@ ifeq ($(DEB_HOST_ARCH_OS),hurd)
 confflags += --with-libs=-lcrypt
 endif
 
+# Always use the internal mkdtemp; see https://bugs.debian.org/1001186.
+confflags += ac_cv_func_mkdtemp=no
+
 # Everything above here is common to the deb and udeb builds.
 confflags_udeb := $(confflags)
 
@@ -173,6 +176,8 @@ endif
 	# dh_installalternatives.
 	ln -sf ssh debian/openssh-client/usr/bin/slogin
 
+	rm -f debian/openssh-tests/usr/lib/openssh/regress/misc/sk-dummy/*.lo
+
 override_dh_installdocs:
 	dh_installdocs -Nopenssh-server -Nopenssh-sftp-server
 	dh_installdocs -popenssh-server -popenssh-sftp-server \
@@ -185,7 +190,6 @@ override_dh_installinit:
 
 override_dh_installsystemd:
 	dh_installsystemd -popenssh-server ssh.service rescue-ssh.target
-	dh_installsystemd -popenssh-server --no-enable ssh.service
 	dh_installsystemd -popenssh-server --no-enable ssh.socket
 
 debian/openssh-server.sshd.pam: debian/openssh-server.sshd.pam.in
@@ -203,6 +207,10 @@ override_dh_runit:
 
 execute_after_dh_fixperms-arch:
 	chmod u+s debian/openssh-client/usr/lib/openssh/ssh-keysign
+
+# Work around debhelper/dh-exec bug #1017023.
+override_dh_missing:
+	dh_missing --list-missing
 
 # Tighten libssl dependencies to match the check in entropy.c.
 execute_after_dh_shlibdeps:

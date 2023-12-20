@@ -1,6 +1,7 @@
 Tests: regress
 Restrictions: needs-root allow-stderr
 Depends: devscripts,
+         dropbear,
          haveged,
          openssh-tests,
          openssl,

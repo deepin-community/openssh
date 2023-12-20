@@ -14,25 +14,7 @@ get_config_option() {
 
 	[ -f /etc/ssh/sshd_config ] || return
 
-	# TODO: actually only one '=' allowed after option
-	perl -lne '
-		s/[[:space:]]+/ /g; s/[[:space:]]+$//;
-		print if s/^[[:space:]]*'"$option"'[[:space:]=]+//i' \
-	   /etc/ssh/sshd_config
-}
-
-
-host_keys_required() {
-	hostkeys="$(get_config_option HostKey)"
-	if [ "$hostkeys" ]; then
-		echo "$hostkeys"
-	else
-		# No HostKey directives at all, so the server picks some
-		# defaults.
-		echo /etc/ssh/ssh_host_rsa_key
-		echo /etc/ssh/ssh_host_ecdsa_key
-		echo /etc/ssh/ssh_host_ed25519_key
-	fi
+	/usr/sbin/sshd -G | sed -n "s/^$option //Ip"
 }
 
 
@@ -58,7 +40,7 @@ create_key() {
 
 
 create_keys() {
-	hostkeys="$(host_keys_required)"
+	hostkeys="$(get_config_option HostKey)"
 
 	create_key "Creating SSH2 RSA key; this may take some time ..." \
 		"$hostkeys" /etc/ssh/ssh_host_rsa_key -t rsa
@@ -92,7 +74,7 @@ create_sshdconfig() {
 
 	trap cleanup EXIT
 	new_config="$(mktemp)"
-	cp -a /usr/share/openssh/sshd_config "$new_config"
+	cp -aZ /usr/share/openssh/sshd_config "$new_config"
 	if [ "$permit_root_login" != true ]; then
 		sed -i 's/^#*PermitRootLogin .*/PermitRootLogin yes/' \
 			"$new_config"
@@ -101,7 +83,7 @@ create_sshdconfig() {
 		sed -i 's/^#PasswordAuthentication .*/PasswordAuthentication no/' \
 			"$new_config"
 	fi
-	mkdir -p /etc/ssh
+	mkdir -pZ /etc/ssh
 	ucf --three-way --debconf-ok \
 		--sum-file /usr/share/openssh/sshd_config.md5sum \
 		"$new_config" /etc/ssh/sshd_config
@@ -127,6 +109,14 @@ if [ "$action" = configure ]; then
 	    # maintainer scripts will have saved the old file as .dpkg-bak,
 	    # which we now move back into place.
 	    mv /etc/ssh/moduli.dpkg-bak /etc/ssh/moduli
+	fi
+	if dpkg --compare-versions "$2" lt-nl 1:9.1p1-1~ && \
+	   deb-systemd-helper --quiet was-enabled ssh.socket && \
+	   [ -d /run/systemd/system ]
+	then
+		# migrate to systemd socket activation.
+		systemctl unmask ssh.service
+		systemctl disable ssh.service
 	fi
 fi
 

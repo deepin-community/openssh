@@ -24,6 +24,4 @@ restore-authorized_keys2.patch
 revert-ipqos-defaults.patch
 maxhostnamelen.patch
 conch-ssh-rsa.patch
-deepin-package-version-ext.patch
-deepin-ssh-connect-idle-timeout.patch
-deepin-ssh-keygen-privatekey-file-perm.patch
+systemd-socket-activation.patch
