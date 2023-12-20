@@ -1,3 +1,12 @@
+openssh (1:9.6p1-1deepin1) unstable; urgency=medium
+
+  * Refresh and re-apply deepin patches:
+    - deepin-ssh-connect-idle-timeout.patch
+    - deepin-ssh-keygen-privatekey-file-perm.patch
+  * Drop deepin-package-version-ext.patch since we have dpkg vendor now.
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Wed, 20 Dec 2023 14:06:41 +0800
+
 openssh (1:9.6p1-1) unstable; urgency=medium
 
   * Use single quotes in suggested ssh-keygen commands (closes: #1057835).
