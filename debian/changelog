@@ -1,3 +1,13 @@
+openssh (1:9.9p1-3deepin1) unstable; urgency=medium
+
+  * Refresh and re-apply deepin patches:
+    deepin-extra-version.patch
+    deepin-ssh-connect-idle-timeout.patch
+    deepin-ssh-keygen-privatekey-file-perm.patch
+  * Update openssh-server.ucf-md5sum.
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Wed, 15 Jan 2025 14:42:25 +0800
+
 openssh (1:9.9p1-3) unstable; urgency=medium
 
   * Fix mlkem768x25519-sha256 key exchange algorithm on big-endian
