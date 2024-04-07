@@ -1,4 +1,4 @@
-From 44f9b28b1c8adaf00af6e011928141cfbd729b9a Mon Sep 17 00:00:00 2001
+From 673c225f85e2666e10be71a1d87225de2bb2aeb2 Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@debian.org>
 Date: Sun, 9 Feb 2014 16:09:58 +0000
 Subject: Allow harmless group-writability
@@ -65,7 +65,7 @@ index 8ccf06370..08a75fc4e 100644
  			    "bad owner or modes for %.200s",
  			    pw->pw_name, user_hostfile);
 diff --git a/misc.c b/misc.c
-index 3db2e4d0b..f667a99f8 100644
+index 5dc9d54a2..d0d9301d7 100644
 --- a/misc.c
 +++ b/misc.c
 @@ -62,9 +62,9 @@
@@ -156,10 +156,10 @@ index 3db2e4d0b..f667a99f8 100644
  			    "bad ownership or modes for directory %s", buf);
  			return -1;
 diff --git a/misc.h b/misc.h
-index 74c6f832c..0aabe84ad 100644
+index 9bacce520..a1fb74579 100644
 --- a/misc.h
 +++ b/misc.h
-@@ -237,6 +237,8 @@ struct notifier_ctx *notify_start(int, const char *, ...)
+@@ -238,6 +238,8 @@ struct notifier_ctx *notify_start(int, const char *, ...)
  void	notify_complete(struct notifier_ctx *, const char *, ...)
  	__attribute__((format(printf, 2, 3)));
  
@@ -169,10 +169,10 @@ index 74c6f832c..0aabe84ad 100644
  #define MAXIMUM(a, b)	(((a) > (b)) ? (a) : (b))
  #define ROUNDUP(x, y)   ((((x)+((y)-1))/(y))*(y))
 diff --git a/readconf.c b/readconf.c
-index bd2e78ab7..6cf3612e7 100644
+index c6e609fca..d68658185 100644
 --- a/readconf.c
 +++ b/readconf.c
-@@ -2481,8 +2481,7 @@ read_config_file_depth(const char *filename, struct passwd *pw,
+@@ -2518,8 +2518,7 @@ read_config_file_depth(const char *filename, struct passwd *pw,
  
  		if (fstat(fileno(f), &sb) == -1)
  			fatal("fstat %s: %s", filename, strerror(errno));
@@ -196,10 +196,10 @@ index 877c3bc64..2d07c919e 100644
  .It Pa ~/.ssh/environment
  Contains additional definitions for environment variables; see
 diff --git a/ssh_config.5 b/ssh_config.5
-index 25ccbed28..bebfe1cee 100644
+index 6b482ee15..4afb8fb7a 100644
 --- a/ssh_config.5
 +++ b/ssh_config.5
-@@ -2395,6 +2395,8 @@ The format of this file is described above.
+@@ -2405,6 +2405,8 @@ The format of this file is described above.
  This file is used by the SSH client.
  Because of the potential for abuse, this file must have strict permissions:
  read/write for the user, and not writable by others.

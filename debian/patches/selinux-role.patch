@@ -1,4 +1,4 @@
-From 42e6d9d59082e75efe0ce7fca91c4297137cfb93 Mon Sep 17 00:00:00 2001
+From 13a9ed0149b0861aac9c6c6f078ff42a5d8839f0 Mon Sep 17 00:00:00 2001
 From: Manoj Srivastava <srivasta@debian.org>
 Date: Sun, 9 Feb 2014 16:09:49 +0000
 Subject: Handle SELinux authorisation roles
@@ -362,7 +362,7 @@ index 7fef8c983..027fdfb51 100644
  char *platform_krb5_get_principal_name(const char *);
  int platform_locked_account(struct passwd *);
 diff --git a/session.c b/session.c
-index f985b8177..cc6b6714d 100644
+index cbb4edac5..2cb7d0c71 100644
 --- a/session.c
 +++ b/session.c
 @@ -1355,7 +1355,7 @@ safely_chroot(const char *path, uid_t uid)
@@ -424,7 +424,7 @@ index 344a1ddf9..20ea822a7 100644
  const char	*session_get_remote_name_or_ip(struct ssh *, u_int, int);
  
 diff --git a/sshd.c b/sshd.c
-index c57ab9628..1895a9972 100644
+index 87e25d19b..9c9f38e5b 100644
 --- a/sshd.c
 +++ b/sshd.c
 @@ -579,7 +579,7 @@ privsep_postauth(struct ssh *ssh, Authctxt *authctxt)

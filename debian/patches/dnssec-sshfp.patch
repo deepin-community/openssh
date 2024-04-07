@@ -1,4 +1,4 @@
-From bdf9d563e4ecfcf17de88d67df844af469c3d77e Mon Sep 17 00:00:00 2001
+From 2d07e4a73975fd8b478680e8a4490fc6c48a6390 Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@debian.org>
 Date: Sun, 9 Feb 2014 16:10:01 +0000
 Subject: Force use of DNSSEC even if "options edns0" isn't in resolv.conf

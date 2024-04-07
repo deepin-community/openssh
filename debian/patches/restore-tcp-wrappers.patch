@@ -1,4 +1,4 @@
-From e79b4cebc0d5e1b8fb5083aed781df70c4db021d Mon Sep 17 00:00:00 2001
+From f6856e554804e6bd6c93fb48bea73a26f912ad7f Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@debian.org>
 Date: Tue, 7 Oct 2014 13:22:41 +0100
 Subject: Restore TCP wrappers support
@@ -28,10 +28,10 @@ Patch-Name: restore-tcp-wrappers.patch
  3 files changed, 89 insertions(+)
 
 diff --git a/configure.ac b/configure.ac
-index 2aeab040c..badfacf8f 100644
+index bb3e644fe..2b2c4f086 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -1677,6 +1677,62 @@ else
+@@ -1685,6 +1685,62 @@ else
  	AC_MSG_RESULT([no])
  fi
  
@@ -94,7 +94,7 @@ index 2aeab040c..badfacf8f 100644
  # Check whether user wants to use ldns
  LDNS_MSG="no"
  AC_ARG_WITH(ldns,
-@@ -5669,6 +5725,7 @@ echo "                       PAM support: $PAM_MSG"
+@@ -5707,6 +5763,7 @@ echo "                       PAM support: $PAM_MSG"
  echo "                   OSF SIA support: $SIA_MSG"
  echo "                 KerberosV support: $KRB5_MSG"
  echo "                   SELinux support: $SELINUX_MSG"
@@ -128,7 +128,7 @@ index 73d5e9232..8efeacdf1 100644
  .Xr moduli 5 ,
  .Xr sshd_config 5 ,
 diff --git a/sshd.c b/sshd.c
-index fee5cac64..c57ab9628 100644
+index d5c3dfe57..87e25d19b 100644
 --- a/sshd.c
 +++ b/sshd.c
 @@ -128,6 +128,13 @@

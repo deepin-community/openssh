@@ -1,4 +1,4 @@
-From 9c36b0b02fe0e6af1553e93bdc7c2e6e97e6514c Mon Sep 17 00:00:00 2001
+From 2d6d05de518be9a3b3724a951e9dcb57e4c6124e Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@ubuntu.com>
 Date: Sun, 9 Feb 2014 16:09:50 +0000
 Subject: Accept obsolete ssh-vulnkey configuration options
@@ -17,7 +17,7 @@ Patch-Name: ssh-vulnkey-compat.patch
  2 files changed, 2 insertions(+)
 
 diff --git a/readconf.c b/readconf.c
-index ef67ab20f..93e431d71 100644
+index 91d3c0aa0..0f0fb67a5 100644
 --- a/readconf.c
 +++ b/readconf.c
 @@ -197,6 +197,7 @@ static struct {
@@ -29,7 +29,7 @@ index ef67ab20f..93e431d71 100644
  	{ "useroaming", oDeprecated },
  	{ "usersh", oDeprecated },
 diff --git a/servconf.c b/servconf.c
-index 940e1d50a..b61295758 100644
+index 961cf9e45..193d73cca 100644
 --- a/servconf.c
 +++ b/servconf.c
 @@ -649,6 +649,7 @@ static struct {
