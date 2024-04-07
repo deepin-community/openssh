@@ -28,3 +28,6 @@ configure-cache-vars.patch
 pam-avoid-unknown-host.patch
 mlkem768x25519-big-endian-1.patch
 mlkem768x25519-big-endian-2.patch
+deepin-extra-version.patch
+deepin-ssh-connect-idle-timeout.patch
+deepin-ssh-keygen-privatekey-file-perm.patch
