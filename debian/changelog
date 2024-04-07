@@ -1,3 +1,13 @@
+openssh (1:9.7p1-4deepin1) unstable; urgency=medium
+
+  * Refresh and re-apply deepin patches:
+    deepin-extra-version.patch
+    deepin-ssh-connect-idle-timeout.patch
+    deepin-ssh-keygen-privatekey-file-perm.patch
+  * Update openssh-server.ucf-md5sum.
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Sun, 07 Apr 2024 15:23:02 +0800
+
 openssh (1:9.7p1-4) unstable; urgency=medium
 
   * Rework systemd readiness notification and socket activation patches to
