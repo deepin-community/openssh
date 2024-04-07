@@ -1,5 +1,5 @@
 Tests: regress
-Restrictions: needs-root allow-stderr
+Restrictions: needs-root allow-stderr isolation-container
 Depends: devscripts,
          dropbear,
          haveged,

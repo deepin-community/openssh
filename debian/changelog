@@ -1,11 +1,108 @@
-openssh (1:9.6p1-1deepin1) unstable; urgency=medium
+openssh (1:9.7p1-4) unstable; urgency=medium
 
-  * Refresh and re-apply deepin patches:
-    - deepin-ssh-connect-idle-timeout.patch
-    - deepin-ssh-keygen-privatekey-file-perm.patch
-  * Drop deepin-package-version-ext.patch since we have dpkg vendor now.
+  * Rework systemd readiness notification and socket activation patches to
+    not link against libsystemd (the former via an upstream patch).
+  * Force -fzero-call-used-regs=used not to be used on ppc64el (it's
+    unsupported, but configure fails to detect this).
 
- -- Tianyu Chen <sweetyfish@deepin.org>  Wed, 20 Dec 2023 14:06:41 +0800
+ -- Colin Watson <cjwatson@debian.org>  Wed, 03 Apr 2024 12:06:08 +0100
+
+openssh (1:9.7p1-3) unstable; urgency=medium
+
+  * Fix gssapi-keyex declaration further (thanks, Andreas Hasenack;
+    LP: #2053146).
+  * Extend -fzero-call-used-regs check to catch m68k gcc bug (closes:
+    #1067243).
+  * debian/tests/regress: Set a different IP address for UNKNOWN.
+  * Re-enable ssh-askpass-gnome on all architectures.
+  * regress: Redirect conch stdin from /dev/zero (re-enables conch interop
+    tests).
+  * Drop "Work around RSA SHA-2 signature issues in conch" patch (no longer
+    needed now that Twisted is fixed).
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 31 Mar 2024 11:55:38 +0100
+
+openssh (1:9.7p1-2) unstable; urgency=medium
+
+  [ Simon McVittie ]
+  * d/control, d/rules: Disable ssh-askpass-gnome on 32-bit, except i386
+    (closes: #1066847).
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 14 Mar 2024 11:45:12 +0000
+
+openssh (1:9.7p1-1) unstable; urgency=medium
+
+  * Add the isolation-container restriction to the "regress" autopkgtest.
+    Our setup code wants to ensure that the haveged service is running, and
+    furthermore at least the agent-subprocess test assumes that there's an
+    init to reap zombie processes and doesn't work in (e.g.)
+    autopkgtest-virt-unshare.
+  * New upstream release (https://www.openssh.com/releasenotes.html#9.7p1):
+    - ssh(1), sshd(8): add a "global" ChannelTimeout type that watches all
+      open channels and will close all open channels if there is no traffic
+      on any of them for the specified interval. This is in addition to the
+      existing per-channel timeouts added recently.
+      This supports situations like having both session and x11 forwarding
+      channels open where one may be idle for an extended period but the
+      other is actively used. The global timeout could close both channels
+      when both have been idle for too long (closes: #165185).
+    - All: make DSA key support compile-time optional, defaulting to on.
+    - sshd(8): don't append an unnecessary space to the end of subsystem
+      arguments (bz3667)
+    - ssh(1): fix the multiplexing "channel proxy" mode, broken when
+      keystroke timing obfuscation was added. (GHPR#463)
+    - ssh(1), sshd(8): fix spurious configuration parsing errors when
+      options that accept array arguments are overridden (bz3657).
+    - ssh-agent(1): fix potential spin in signal handler (bz3670)
+    - Many fixes to manual pages and other documentation.
+    - Greatly improve interop testing against PuTTY.
+  * Skip utimensat test on ZFS, since it seems to leave the atime set to 0.
+  * Allow passing extra options to debian/tests/regress, for debugging.
+  * Fix gssapi-keyex declaration, broken when rebasing onto 8.9p1
+    (LP: #2053146).
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 14 Mar 2024 10:47:58 +0000
+
+openssh (1:9.6p1-5) unstable; urgency=medium
+
+  * Restore systemd template unit for per-connection sshd instances,
+    although without any corresponding .socket unit for now; this is mainly
+    for use with the forthcoming systemd-ssh-generator (closes: #1061516).
+    It's now called sshd@.service, since unlike the main service there's no
+    need to be concerned about compatibility with the slightly confusing
+    "ssh" service name that Debian has traditionally used.
+
+ -- Colin Watson <cjwatson@debian.org>  Wed, 06 Mar 2024 09:45:56 +0000
+
+openssh (1:9.6p1-4) unstable; urgency=medium
+
+  * Add sshd_config checksums for 1:9.2p1-1 to ucf reference file, and add a
+    test to ensure it doesn't get out of date again.
+  * Drop manual adjustment of OpenSSL dependencies; OpenSSH relaxed its
+    checks for OpenSSL >= 3 in 9.4p1.
+  * Build-depend on pkgconf rather than pkg-config.
+  * Adjust debian/copyright to handle the "placed in the public domain"
+    status of rijndael.* more explicitly.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 26 Feb 2024 12:26:57 +0000
+
+openssh (1:9.6p1-3) unstable; urgency=medium
+
+  * Allow passing extra ssh-agent arguments via
+    "/usr/lib/openssh/agent-launch start", making it possible to override
+    things like identity lifetime using a systemd drop-in unit (closes:
+    #1059639).
+  * Don't try to start rescue-ssh.target in postinst (LP: #2047082).
+
+ -- Colin Watson <cjwatson@debian.org>  Wed, 17 Jan 2024 22:50:07 +0000
+
+openssh (1:9.6p1-2) unstable; urgency=medium
+
+  * Improve detection of broken -fzero-call-used-regs=used (see
+    https://bugzilla.mindrot.org/show_bug.cgi?id=3645; fixes build on
+    ppc64/ppc64el).
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 21 Dec 2023 16:07:34 +0000
 
 openssh (1:9.6p1-1) unstable; urgency=medium
 
@@ -21,17 +118,17 @@ openssh (1:9.6p1-1) unstable; urgency=medium
       encryption, and deleting an equal number of consecutive messages
       immediately after encryption starts. A peer SSH client/server would
       not be able to detect that messages were deleted.
-    - [SECURITY] ssh-agent(1): when adding PKCS#11-hosted private keys while
-      specifying destination constraints, if the PKCS#11 token returned
-      multiple keys then only the first key had the constraints applied. Use
-      of regular private keys, FIDO tokens and unconstrained keys are
-      unaffected.
-    - [SECURITY] ssh(1): if an invalid user or hostname that contained shell
-      metacharacters was passed to ssh(1), and a ProxyCommand, LocalCommand
-      directive or "match exec" predicate referenced the user or hostname
-      via %u, %h or similar expansion token, then an attacker who could
-      supply arbitrary user/hostnames to ssh(1) could potentially perform
-      command injection depending on what quoting was present in the
+    - [CVE-2023-51384] ssh-agent(1): when adding PKCS#11-hosted private keys
+      while specifying destination constraints, if the PKCS#11 token
+      returned multiple keys then only the first key had the constraints
+      applied. Use of regular private keys, FIDO tokens and unconstrained
+      keys are unaffected.
+    - [CVE-2023-51385] ssh(1): if an invalid user or hostname that contained
+      shell metacharacters was passed to ssh(1), and a ProxyCommand,
+      LocalCommand directive or "match exec" predicate referenced the user
+      or hostname via %u, %h or similar expansion token, then an attacker
+      who could supply arbitrary user/hostnames to ssh(1) could potentially
+      perform command injection depending on what quoting was present in the
       user-supplied ssh_config(5) directive. OpenSSH 9.6 now bans most shell
       metacharacters from user and hostnames supplied via the command-line.
     - ssh(1), sshd(8): the RFC4254 connection/channels protocol provides a

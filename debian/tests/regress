@@ -73,7 +73,7 @@ EOF
 	# tests with "UsePAM yes" appears to be to make "UNKNOWN"
 	# resolvable.
 	if ! grep -q '[[:space:]]UNKNOWN$' /etc/hosts; then
-		echo '127.0.0.1 UNKNOWN' >>/etc/hosts
+		echo '127.0.0.2 UNKNOWN' >>/etc/hosts
 		ADDED_HOST=:
 	fi
 
@@ -81,4 +81,4 @@ EOF
 	exit "$?"
 fi
 
-annotate-output +%H:%M:%S.%N /usr/lib/openssh/regress/run-tests "$TMP"
+annotate-output +%H:%M:%S.%N /usr/lib/openssh/regress/run-tests "$TMP" "$@"

@@ -1,4 +1,4 @@
-From c9eb9a51710efba1a6a6d344557c6a6b9c4e7866 Mon Sep 17 00:00:00 2001
+From 04acdcf452c7a88ac8c37ca6870a571125fbc8da Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@debian.org>
 Date: Sun, 9 Feb 2014 16:10:18 +0000
 Subject: Various Debian-specific configuration changes
@@ -46,10 +46,10 @@ Patch-Name: debian-config.patch
  7 files changed, 99 insertions(+), 9 deletions(-)
 
 diff --git a/readconf.c b/readconf.c
-index 6cf3612e7..2e6d3e726 100644
+index d68658185..720062bcc 100644
 --- a/readconf.c
 +++ b/readconf.c
-@@ -2702,7 +2702,7 @@ fill_default_options(Options * options)
+@@ -2739,7 +2739,7 @@ fill_default_options(Options * options)
  	if (options->forward_x11 == -1)
  		options->forward_x11 = 0;
  	if (options->forward_x11_trusted == -1)
@@ -59,10 +59,10 @@ index 6cf3612e7..2e6d3e726 100644
  		options->forward_x11_timeout = 1200;
  	/*
 diff --git a/regress/test-exec.sh b/regress/test-exec.sh
-index 089ef73c4..603848683 100644
+index ad627941f..56e98159c 100644
 --- a/regress/test-exec.sh
 +++ b/regress/test-exec.sh
-@@ -606,6 +606,7 @@ cat << EOF > $OBJ/sshd_config
+@@ -609,6 +609,7 @@ cat << EOF > $OBJ/sshd_config
  	AcceptEnv		_XXX_TEST_*
  	AcceptEnv		_XXX_TEST
  	Subsystem	sftp	$SFTPSERVER
@@ -138,7 +138,7 @@ index 16197d15d..92d06ef38 100644
 +    HashKnownHosts yes
 +    GSSAPIAuthentication yes
 diff --git a/ssh_config.5 b/ssh_config.5
-index 943260617..4ec34d1a3 100644
+index 41d4d7406..c2789a09d 100644
 --- a/ssh_config.5
 +++ b/ssh_config.5
 @@ -71,6 +71,29 @@ Since the first obtained value for each parameter is used, more
@@ -171,7 +171,7 @@ index 943260617..4ec34d1a3 100644
  The file contains keyword-argument pairs, one per line.
  Lines starting with
  .Ql #
-@@ -891,11 +914,12 @@ elapsed.
+@@ -901,11 +924,12 @@ elapsed.
  .It Cm ForwardX11Trusted
  If this option is set to
  .Cm yes ,
@@ -244,7 +244,7 @@ index ecfe8d026..677f97d5d 100644
  # Example of overriding settings on a per-user basis
  #Match User anoncvs
 diff --git a/sshd_config.5 b/sshd_config.5
-index 98bd201b0..d0bf6d641 100644
+index 0e8891c4f..12083e839 100644
 --- a/sshd_config.5
 +++ b/sshd_config.5
 @@ -56,6 +56,35 @@ Arguments may optionally be enclosed in double quotes

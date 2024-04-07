@@ -1,4 +1,4 @@
-From a3b95c8a438d7d8eff92c62e2b8ea18af5a56466 Mon Sep 17 00:00:00 2001
+From 30df3f03ff91b648414b35bdc697ce9127a9fe90 Mon Sep 17 00:00:00 2001
 From: Kees Cook <kees@debian.org>
 Date: Sun, 9 Feb 2014 16:10:06 +0000
 Subject: Add DebianBanner server configuration option
@@ -22,10 +22,10 @@ Patch-Name: debian-banner.patch
  7 files changed, 23 insertions(+), 5 deletions(-)
 
 diff --git a/kex.c b/kex.c
-index a532d8cb0..db6717e9f 100644
+index 4e988e39b..30f2ce2b3 100644
 --- a/kex.c
 +++ b/kex.c
-@@ -1522,7 +1522,7 @@ send_error(struct ssh *ssh, char *msg)
+@@ -1545,7 +1545,7 @@ send_error(struct ssh *ssh, char *msg)
   */
  int
  kex_exchange_identification(struct ssh *ssh, int timeout_ms,
@@ -34,7 +34,7 @@ index a532d8cb0..db6717e9f 100644
  {
  	int remote_major, remote_minor, mismatch, oerrno = 0;
  	size_t len, n;
-@@ -1540,7 +1540,8 @@ kex_exchange_identification(struct ssh *ssh, int timeout_ms,
+@@ -1563,7 +1563,8 @@ kex_exchange_identification(struct ssh *ssh, int timeout_ms,
  	if (version_addendum != NULL && *version_addendum == '\0')
  		version_addendum = NULL;
  	if ((r = sshbuf_putf(our_version, "SSH-%d.%d-%s%s%s\r\n",
@@ -45,7 +45,7 @@ index a532d8cb0..db6717e9f 100644
  	    version_addendum == NULL ? "" : version_addendum)) != 0) {
  		oerrno = errno;
 diff --git a/kex.h b/kex.h
-index faee60f16..4aff3b756 100644
+index 32da837f8..41888c0d8 100644
 --- a/kex.h
 +++ b/kex.h
 @@ -208,7 +208,7 @@ void	 kex_proposal_populate_entries(struct ssh *, char *prop[PROPOSAL_MAX],
@@ -58,7 +58,7 @@ index faee60f16..4aff3b756 100644
  struct kex *kex_new(void);
  int	 kex_ready(struct ssh *, char *[PROPOSAL_MAX]);
 diff --git a/servconf.c b/servconf.c
-index b61295758..cecbef9a1 100644
+index 193d73cca..12aa1f4ad 100644
 --- a/servconf.c
 +++ b/servconf.c
 @@ -201,6 +201,7 @@ initialize_server_options(ServerOptions *options)
@@ -94,7 +94,7 @@ index b61295758..cecbef9a1 100644
  	{ NULL, sBadOption, 0 }
  };
  
-@@ -2584,6 +2589,10 @@ process_server_config_line_depth(ServerOptions *options, char *line,
+@@ -2637,6 +2642,10 @@ process_server_config_line_depth(ServerOptions *options, char *line,
  		}
  		goto parse_time;
  
@@ -105,7 +105,7 @@ index b61295758..cecbef9a1 100644
  	case sDeprecated:
  	case sIgnore:
  	case sUnsupported:
-@@ -3131,6 +3140,7 @@ dump_config(ServerOptions *o)
+@@ -3185,6 +3194,7 @@ dump_config(ServerOptions *o)
  	dump_cfg_fmtint(sStreamLocalBindUnlink, o->fwd_opts.streamlocal_bind_unlink);
  	dump_cfg_fmtint(sFingerprintHash, o->fingerprint_hash);
  	dump_cfg_fmtint(sExposeAuthInfo, o->expose_userauth_info);
@@ -127,7 +127,7 @@ index 2ce4ae0ad..e0c0af903 100644
  
  /* Information about the incoming connection as used by Match */
 diff --git a/sshconnect.c b/sshconnect.c
-index f3096cad9..ccccb4a52 100644
+index 23f79ed2b..da20ecd88 100644
 --- a/sshconnect.c
 +++ b/sshconnect.c
 @@ -1581,7 +1581,7 @@ ssh_login(struct ssh *ssh, Sensitive *sensitive, const char *orighost,
@@ -140,7 +140,7 @@ index f3096cad9..ccccb4a52 100644
  
  	/* Put the connection into non-blocking mode. */
 diff --git a/sshd.c b/sshd.c
-index 1895a9972..d56ba490b 100644
+index 9c9f38e5b..8fab51ebb 100644
 --- a/sshd.c
 +++ b/sshd.c
 @@ -2249,7 +2249,7 @@ main(int ac, char **av)
@@ -153,10 +153,10 @@ index 1895a9972..d56ba490b 100644
  		sshpkt_fatal(ssh, r, "banner exchange");
  
 diff --git a/sshd_config.5 b/sshd_config.5
-index 5de2fd8cf..630c18736 100644
+index e06ef8abd..1a8febfa6 100644
 --- a/sshd_config.5
 +++ b/sshd_config.5
-@@ -621,6 +621,11 @@ or
+@@ -629,6 +629,11 @@ or
  .Cm no .
  The default is
  .Cm yes .
