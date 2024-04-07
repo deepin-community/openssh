@@ -28,3 +28,6 @@ skip-utimensat-test-on-zfs.patch
 zero-call-used-regs-m68k.patch
 regress-conch-dev-zero.patch
 configure-cache-vars.patch
+deepin-extra-version.patch
+deepin-ssh-connect-idle-timeout.patch
+deepin-ssh-keygen-privatekey-file-perm.patch
