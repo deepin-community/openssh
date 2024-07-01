@@ -1,3 +1,10 @@
+openssh (1:9.7p1-4deepin2) unstable; urgency=high
+
+  * Disable logging in sshsigdie.
+    https://seclists.org/oss-sec/2024/q3/2
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Mon, 01 Jul 2024 17:13:27 +0800
+
 openssh (1:9.7p1-4deepin1) unstable; urgency=medium
 
   * Refresh and re-apply deepin patches:
