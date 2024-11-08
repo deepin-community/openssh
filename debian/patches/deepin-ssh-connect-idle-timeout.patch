@@ -13,8 +13,8 @@ Last-Update: 2022-05-19
  #Compression delayed
 -#ClientAliveInterval 0
 -#ClientAliveCountMax 3
-+ClientAliveInterval 900
-+ClientAliveCountMax 1
++# set inactive timeout for shell & subsystem connections
++ChannelTimeout session:shell=900 session:subsystem*=900
  #UseDNS no
  #PidFile /var/run/sshd.pid
  #MaxStartups 10:30:100

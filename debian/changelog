@@ -1,3 +1,12 @@
+openssh (1:9.9p1-3deepin2) unstable; urgency=medium
+
+  [ liujianqiang ]
+  * ssh.service is disabled by default.
+  * update ChannelTimeout config to implement auto close inactive
+    connections.
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Wed, 15 Jan 2025 14:50:47 +0800
+
 openssh (1:9.9p1-3deepin1) unstable; urgency=medium
 
   * Refresh and re-apply deepin patches:
