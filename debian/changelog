@@ -1,3 +1,10 @@
+openssh (1:9.7p1-4deepin3) unstable; urgency=medium
+
+  * ssh.service is disabled by default.
+  * update ChannelTimeout config to implement auto close inactive connections.
+
+ -- liujianqiang <liujianqiang@uniontech.com>  Fri, 08 Nov 2024 09:19:57 +0800
+
 openssh (1:9.7p1-4deepin2) unstable; urgency=high
 
   * Disable logging in sshsigdie.
