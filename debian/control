@@ -18,6 +18,7 @@ Build-Depends: debhelper (>= 13.1~),
                libwrap0-dev | libwrap-dev,
                pkgconf,
                zlib1g-dev,
+               lsb-release,
 Standards-Version: 4.6.2
 Uploaders: Colin Watson <cjwatson@debian.org>,
            Matthew Vernon <matthew@debian.org>,
