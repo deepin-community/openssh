@@ -1,3 +1,10 @@
+openssh (1:9.7p1-4deepin3) unstable; urgency=medium
+
+  * Add ChannelTimeout config in sshd_config as upstream uses it to close
+    inactive connections.
+
+ -- zhoushicheng <zhoushicheng@uniontech.com>  Fri, 06 Dec 2024 17:17:20 +0800
+
 openssh (1:9.7p1-4deepin2) unstable; urgency=high
 
   * Disable logging in sshsigdie.
