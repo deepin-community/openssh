@@ -44,8 +44,6 @@ create_keys() {
 
 	create_key "Creating SSH2 RSA key; this may take some time ..." \
 		"$hostkeys" /etc/ssh/ssh_host_rsa_key -t rsa
-	create_key "Creating SSH2 DSA key; this may take some time ..." \
-		"$hostkeys" /etc/ssh/ssh_host_dsa_key -t dsa
 	create_key "Creating SSH2 ECDSA key; this may take some time ..." \
 		"$hostkeys" /etc/ssh/ssh_host_ecdsa_key -t ecdsa
 	create_key "Creating SSH2 ED25519 key; this may take some time ..." \

@@ -1,4 +1,4 @@
-From 5ec3ad9b1f13f624244f7dea20d43e8972ce9e97 Mon Sep 17 00:00:00 2001
+From e868160317622303dd192460a186162dfa4b6c2e Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@debian.org>
 Date: Sun, 9 Feb 2014 16:10:09 +0000
 Subject: Adjust various OpenBSD-specific references in manual pages
@@ -6,21 +6,18 @@ Subject: Adjust various OpenBSD-specific references in manual pages
 No single bug reference for this patch, but history includes:
  https://bugs.debian.org/154434 (login.conf(5))
  https://bugs.debian.org/513417 (/etc/rc)
- https://bugs.debian.org/530692 (ssl(8))
- https://bugs.launchpad.net/bugs/456660 (ssl(8))
  https://bugs.debian.org/998069 (rdomain(4))
 
 Forwarded: not-needed
-Last-Update: 2023-09-02
+Last-Update: 2024-07-03
 
 Patch-Name: openbsd-docs.patch
 ---
  moduli.5      |  4 ++--
  ssh-keygen.1  | 12 ++++--------
- ssh.1         |  4 ++++
  sshd.8        |  5 ++---
  sshd_config.5 | 40 ++--------------------------------------
- 5 files changed, 14 insertions(+), 51 deletions(-)
+ 4 files changed, 10 insertions(+), 51 deletions(-)
 
 diff --git a/moduli.5 b/moduli.5
 index 5086a6d42..6dffdc7e6 100644
@@ -45,10 +42,10 @@ index 5086a6d42..6dffdc7e6 100644
  .Sh SEE ALSO
  .Xr ssh-keygen 1 ,
 diff --git a/ssh-keygen.1 b/ssh-keygen.1
-index c392141ea..1155cf555 100644
+index 06f0555a4..76239bcdf 100644
 --- a/ssh-keygen.1
 +++ b/ssh-keygen.1
-@@ -212,9 +212,7 @@ key in
+@@ -211,9 +211,7 @@ key in
  .Pa ~/.ssh/id_ed25519_sk
  or
  .Pa ~/.ssh/id_rsa .
@@ -59,7 +56,7 @@ index c392141ea..1155cf555 100644
  .Pp
  Normally this program generates the key and asks for a file in which
  to store the private key.
-@@ -279,9 +277,7 @@ If
+@@ -278,9 +276,7 @@ If
  .Fl f
  has also been specified, its argument is used as a prefix to the
  default path for the resulting host key files.
@@ -70,7 +67,7 @@ index c392141ea..1155cf555 100644
  .It Fl a Ar rounds
  When saving a private key, this option specifies the number of KDF
  (key derivation function, currently
-@@ -864,7 +860,7 @@ option.
+@@ -860,7 +856,7 @@ option.
  Valid generator values are 2, 3, and 5.
  .Pp
  Screened DH groups may be installed in
@@ -79,7 +76,7 @@ index c392141ea..1155cf555 100644
  It is important that this file contains moduli of a range of bit lengths.
  .Pp
  A number of options are available for moduli generation and screening via the
-@@ -1322,7 +1318,7 @@ on all machines
+@@ -1316,7 +1312,7 @@ on all machines
  where the user wishes to log in using public key authentication.
  There is no need to keep the contents of this file secret.
  .Pp
@@ -88,23 +85,8 @@ index c392141ea..1155cf555 100644
  Contains Diffie-Hellman groups used for DH-GEX.
  The file format is described in
  .Xr moduli 5 .
-diff --git a/ssh.1 b/ssh.1
-index 2d07c919e..60e97dc62 100644
---- a/ssh.1
-+++ b/ssh.1
-@@ -939,6 +939,10 @@ implements public key authentication protocol automatically,
- using one of the DSA, ECDSA, Ed25519 or RSA algorithms.
- The HISTORY section of
- .Xr ssl 8
-+(on non-OpenBSD systems, see
-+.nh
-+http://www.openbsd.org/cgi\-bin/man.cgi?query=ssl&sektion=8#HISTORY)
-+.hy
- contains a brief discussion of the DSA and RSA algorithms.
- .Pp
- The file
 diff --git a/sshd.8 b/sshd.8
-index 8efeacdf1..6527e28a3 100644
+index 464d402f6..bd1117bfe 100644
 --- a/sshd.8
 +++ b/sshd.8
 @@ -64,7 +64,7 @@ over an insecure network.
@@ -116,7 +98,7 @@ index 8efeacdf1..6527e28a3 100644
  It forks a new
  daemon for each incoming connection.
  The forked daemons handle
-@@ -935,7 +935,7 @@ This file is for host-based authentication (see
+@@ -936,7 +936,7 @@ This file is for host-based authentication (see
  .Xr ssh 1 ) .
  It should only be writable by root.
  .Pp
@@ -125,7 +107,7 @@ index 8efeacdf1..6527e28a3 100644
  Contains Diffie-Hellman groups used for the "Diffie-Hellman Group Exchange"
  key exchange method.
  The file format is described in
-@@ -1033,7 +1033,6 @@ The content of this file is not sensitive; it can be world-readable.
+@@ -1034,7 +1034,6 @@ The content of this file is not sensitive; it can be world-readable.
  .Xr ssh-keyscan 1 ,
  .Xr chroot 2 ,
  .Xr hosts_access 5 ,
@@ -134,7 +116,7 @@ index 8efeacdf1..6527e28a3 100644
  .Xr sshd_config 5 ,
  .Xr inetd 8 ,
 diff --git a/sshd_config.5 b/sshd_config.5
-index 1a8febfa6..0e8891c4f 100644
+index ed2f74060..e177e4af8 100644
 --- a/sshd_config.5
 +++ b/sshd_config.5
 @@ -1001,9 +1001,6 @@ for interactive sessions and
@@ -147,7 +129,7 @@ index 1a8febfa6..0e8891c4f 100644
  The default is
  .Cm yes .
  The argument to this keyword must be
-@@ -1107,45 +1104,33 @@ The following forms may be used:
+@@ -1117,45 +1114,33 @@ The following forms may be used:
  .Sm off
  .Ar hostname | address
  .Sm on
@@ -194,7 +176,7 @@ index 1a8febfa6..0e8891c4f 100644
  .It Cm LoginGraceTime
  The server disconnects after this time if the user has not
  successfully logged in.
-@@ -1271,14 +1256,8 @@ The available criteria are
+@@ -1283,14 +1268,8 @@ The available criteria are
  .Cm Host ,
  .Cm LocalAddress ,
  .Cm LocalPort ,
@@ -210,15 +192,15 @@ index 1a8febfa6..0e8891c4f 100644
  .Pp
  The match patterns may consist of single entries or comma-separated
  lists and may use the wildcard and negation operators described in the
-@@ -1350,7 +1329,6 @@ Available keywords are
- .Cm PubkeyAuthOptions ,
+@@ -1364,7 +1343,6 @@ Available keywords are
+ .Cm RefuseConnection ,
  .Cm RekeyLimit ,
  .Cm RevokedKeys ,
 -.Cm RDomain ,
  .Cm SetEnv ,
  .Cm StreamLocalBindMask ,
  .Cm StreamLocalBindUnlink ,
-@@ -1745,15 +1723,6 @@ an OpenSSH Key Revocation List (KRL) as generated by
+@@ -1863,15 +1841,6 @@ an OpenSSH Key Revocation List (KRL) as generated by
  .Xr ssh-keygen 1 .
  For more information on KRLs, see the KEY REVOCATION LISTS section in
  .Xr ssh-keygen 1 .
@@ -234,7 +216,7 @@ index 1a8febfa6..0e8891c4f 100644
  .It Cm SecurityKeyProvider
  Specifies a path to a library that will be used when loading
  FIDO authenticator-hosted keys, overriding the default of using
-@@ -2080,8 +2049,6 @@ A literal
+@@ -2205,8 +2174,6 @@ A literal
  Identifies the connection endpoints, containing
  four space-separated values: client address, client port number,
  server address, and server port number.
@@ -243,7 +225,7 @@ index 1a8febfa6..0e8891c4f 100644
  .It %F
  The fingerprint of the CA key.
  .It %f
-@@ -2120,9 +2087,6 @@ accepts the tokens %%, %h, %U, and %u.
+@@ -2245,9 +2212,6 @@ accepts the tokens %%, %h, %U, and %u.
  .Pp
  .Cm ChrootDirectory
  accepts the tokens %%, %h, %U, and %u.
