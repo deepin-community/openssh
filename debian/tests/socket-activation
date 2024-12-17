@@ -1,0 +1,27 @@
+#! /bin/sh
+set -e
+
+testuser="testuser$$"
+adduser --quiet --disabled-password --gecos "" "$testuser"
+runuser -u "$testuser" -- mkdir -m700 "/home/$testuser/.ssh"
+runuser -u "$testuser" -- \
+	ssh-keygen -t ed25519 -N '' -f "/home/$testuser/.ssh/id_ed25519"
+runuser -u "$testuser" -- \
+	cp "/home/$testuser/.ssh/id_ed25519.pub" \
+	"/home/$testuser/.ssh/authorized_keys"
+
+cleanup () {
+	if [ $? -ne 0 ]; then
+		echo "## Something failed"
+		echo
+		echo "## ssh server log"
+		journalctl -b -u ssh.service --lines 100
+	fi
+}
+
+trap cleanup EXIT
+
+systemctl disable --now ssh.service
+systemctl enable --now ssh.socket
+runuser -u "$testuser" -- \
+	ssh -oStrictHostKeyChecking=accept-new "$testuser@localhost" date
