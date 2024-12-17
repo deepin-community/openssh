@@ -1,0 +1,52 @@
+#! /bin/sh
+set -e
+
+testuser="testuser$$"
+adduser --quiet --disabled-password --gecos "" "$testuser"
+runuser -u "$testuser" -- mkdir -m700 "/home/$testuser/.ssh"
+runuser -u "$testuser" -- \
+	ssh-keygen -t ed25519 -N '' -f "/home/$testuser/.ssh/id_ed25519"
+runuser -u "$testuser" -- \
+	cp "/home/$testuser/.ssh/id_ed25519.pub" \
+	"/home/$testuser/.ssh/authorized_keys"
+
+cleanup () {
+	if [ $? -ne 0 ]; then
+		echo "## Something failed"
+		echo
+		echo "## ssh server log"
+		journalctl -b -u ssh.service --lines 100
+	fi
+}
+
+trap cleanup EXIT
+
+cat >/etc/xinetd.d/sshd <<EOF
+service ssh
+{
+	id		= sshd
+	disable		= no
+	type		= UNLISTED
+	port		= 22
+	socket_type	= stream
+	wait		= no
+	user		= root
+	server		= /usr/sbin/sshd
+	server_args	= -i -4
+	log_on_success	+= DURATION USERID
+	log_on_failure	+= USERID
+	nice		= 10
+}
+EOF
+
+mkdir -p /etc/systemd/system/xinetd.service.d
+cat >/etc/systemd/system/xinetd.service.d/sshd.conf <<EOF
+[Service]
+RuntimeDirectory=sshd
+EOF
+
+systemctl daemon-reload
+systemctl disable --now ssh.service
+systemctl reload xinetd.service
+runuser -u "$testuser" -- \
+	ssh -oStrictHostKeyChecking=accept-new "$testuser@localhost" date

@@ -33,7 +33,7 @@ else
 endif
 
 # Change the version string to reflect distribution
-SSH_EXTRAVERSION := $(DEB_VENDOR)-$(shell echo '$(DEB_VERSION)' | sed -e 's/.*-//')
+SSH_EXTRAVERSION := $(DEB_VENDOR)-$(shell echo '$(DEB_VERSION)' | sed -e 's/.*-//; s/+salsaci+.*/+salsaci/')
 
 UBUNTU := $(shell $(call dpkg_vendor_derives_from,Ubuntu))
 ifeq ($(UBUNTU),yes)
@@ -134,7 +134,7 @@ override_dh_auto_build-arch:
 	$(MAKE) -C debian/build-deb regress-prep
 	$(MAKE) -C debian/build-deb $(PARALLEL) regress-binaries regress-unit-binaries
 ifeq ($(filter noudeb,$(DEB_BUILD_PROFILES)),)
-	$(MAKE) -C debian/build-udeb $(PARALLEL) ASKPASS_PROGRAM='/usr/bin/ssh-askpass' ssh scp sftp sshd ssh-keygen
+	$(MAKE) -C debian/build-udeb $(PARALLEL) ASKPASS_PROGRAM='/usr/bin/ssh-askpass' ssh scp sftp sshd ssh-keygen sshd-session
 endif
 
 ifeq ($(filter pkg.openssh.nognome,$(DEB_BUILD_PROFILES)),)
@@ -195,11 +195,7 @@ override_dh_installinit:
 	dh_installinit -R --name ssh
 
 override_dh_installsystemd:
-ifeq ($(shell lsb_release  -i -s),uos)
-	dh_installsystemd -popenssh-server --no-enable ssh.service
-else
 	dh_installsystemd -popenssh-server ssh.service
-endif
 	dh_installsystemd -popenssh-server --no-enable ssh.socket
 	dh_installsystemd -popenssh-server --no-start rescue-ssh.target
 

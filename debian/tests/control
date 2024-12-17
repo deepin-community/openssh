@@ -1,11 +1,46 @@
-Tests: regress
-Restrictions: needs-root allow-stderr isolation-container
-Depends: devscripts,
-         dropbear,
-         haveged,
-         openssh-tests,
-         openssl,
-         putty-tools,
-         python3-twisted,
-         sudo,
-         sysvinit-utils,
+Tests:
+ regress,
+Restrictions:
+ allow-stderr,
+ isolation-container,
+ needs-root,
+Depends:
+ devscripts,
+ dropbear,
+ haveged,
+ openssh-tests,
+ openssl,
+ putty-tools,
+ python3-twisted,
+ sudo,
+ sysvinit-utils,
+
+Tests:
+ ssh-gssapi,
+Restrictions:
+ allow-stderr,
+ isolation-container,
+ needs-root,
+Depends:
+ krb5-admin-server,
+ krb5-kdc,
+ openssh-server-gssapi,
+
+Tests:
+ socket-activation,
+Restrictions:
+ allow-stderr,
+ isolation-container,
+ needs-root,
+Depends:
+ openssh-server,
+
+Tests:
+ xinetd,
+Restrictions:
+ allow-stderr,
+ isolation-container,
+ needs-root,
+Depends:
+ openssh-server,
+ xinetd,

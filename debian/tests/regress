@@ -77,7 +77,7 @@ EOF
 		ADDED_HOST=:
 	fi
 
-	sudo -u openssh-tests env TMP="$TMP" "$0" "$@"
+	runuser -u openssh-tests env TMP="$TMP" "$0" "$@"
 	exit "$?"
 fi
 
