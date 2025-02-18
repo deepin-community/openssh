@@ -1,3 +1,10 @@
+openssh (1:9.9p2-0deepin1) unstable; urgency=medium
+
+  * Update to 9.9p2, fixes CVE-2025-26465, CVE-2025-26466
+  * Refresh patches (mlkem768x25519-big-endian-{1,2}.patch)
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Tue, 18 Feb 2025 18:13:26 +0800
+
 openssh (1:9.9p1-3deepin2) unstable; urgency=medium
 
   [ liujianqiang ]
