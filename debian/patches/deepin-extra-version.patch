@@ -1,7 +1,7 @@
 --- a/version.h
 +++ b/version.h
 @@ -5,7 +5,7 @@
- #define SSH_PORTABLE	"p1"
+ #define SSH_PORTABLE	"p2"
  #define SSH_RELEASE_MINIMUM	SSH_VERSION SSH_PORTABLE
  #ifdef SSH_EXTRAVERSION
 -#define SSH_RELEASE	SSH_RELEASE_MINIMUM " " SSH_EXTRAVERSION
