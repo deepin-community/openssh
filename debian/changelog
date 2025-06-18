@@ -1,3 +1,9 @@
+openssh (1:9.9p2-0deepin2) unstable; urgency=medium
+
+  * feat: add sw64 support
+
+ -- Deepin Packages Builder <packages@deepin.org>  Wed, 18 Jun 2025 13:59:48 +0800
+
 openssh (1:9.9p2-0deepin1) unstable; urgency=medium
 
   * Update to 9.9p2, fixes CVE-2025-26465, CVE-2025-26466
