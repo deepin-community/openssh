@@ -32,6 +32,10 @@ else
   RUN_TESTS :=
 endif
 
+ifeq ($(DEB_BUILD_ARCH), sw64)
+  CFLAGS += -fwrapv -fno-strict-overflow
+endif
+
 # Change the version string to reflect distribution
 SSH_EXTRAVERSION := $(DEB_VENDOR)-$(shell echo '$(DEB_VERSION)' | sed -e 's/.*-//; s/+salsaci+.*/+salsaci/')
 
