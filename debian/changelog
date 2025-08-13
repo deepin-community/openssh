@@ -1,3 +1,9 @@
+openssh (1:9.9p2-0deepin3) unstable; urgency=medium
+
+  * feat: add sm support
+
+ -- Liang Bo <liangbo@uniontech.com>  Fri, 01 Aug 2025 17:31:26 +0800
+
 openssh (1:9.9p2-0deepin2) unstable; urgency=medium
 
   * feat: add sw64 support
