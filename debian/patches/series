@@ -31,3 +31,4 @@ pam-avoid-unknown-host.patch
 deepin-extra-version.patch
 deepin-ssh-connect-idle-timeout.patch
 deepin-ssh-keygen-privatekey-file-perm.patch
+add-sm-support.patch
