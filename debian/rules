@@ -199,7 +199,7 @@ override_dh_installinit:
 	dh_installinit -R --name ssh
 
 override_dh_installsystemd:
-ifeq ($(shell lsb_release  -i -s),uos)
+ifneq (,$(filter uos Uos,$(shell lsb_release -i -s)))
 	dh_installsystemd -popenssh-server --no-enable ssh.service
 else
 	dh_installsystemd -popenssh-server ssh.service
