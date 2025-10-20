@@ -1,4 +1,4 @@
-From c4f6a4d2c7ce9dcd29df3d447e7bc8ddf1b5c592 Mon Sep 17 00:00:00 2001
+From 490a288a8bb2586646956f08a23599c9af758e18 Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@debian.org>
 Date: Tue, 7 Oct 2014 13:22:41 +0100
 Subject: Restore TCP wrappers support
@@ -28,10 +28,10 @@ Patch-Name: restore-tcp-wrappers.patch
  3 files changed, 89 insertions(+)
 
 diff --git a/configure.ac b/configure.ac
-index 6a0140a9d..90548dcfc 100644
+index 53112bdac..d6783774b 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -1693,6 +1693,62 @@ else
+@@ -1797,6 +1797,62 @@ else
  	AC_MSG_RESULT([no])
  fi
  
@@ -94,7 +94,7 @@ index 6a0140a9d..90548dcfc 100644
  # Check whether user wants to use ldns
  LDNS_MSG="no"
  AC_ARG_WITH(ldns,
-@@ -5734,6 +5790,7 @@ echo "                       PAM support: $PAM_MSG"
+@@ -5888,6 +5944,7 @@ echo "                       PAM support: $PAM_MSG"
  echo "                   OSF SIA support: $SIA_MSG"
  echo "                 KerberosV support: $KRB5_MSG"
  echo "                   SELinux support: $SELINUX_MSG"
@@ -103,10 +103,10 @@ index 6a0140a9d..90548dcfc 100644
  echo "                   libldns support: $LDNS_MSG"
  echo "  Solaris process contract support: $SPC_MSG"
 diff --git a/sshd-session.c b/sshd-session.c
-index 03a028c82..f36d58b1b 100644
+index 3ea9da40c..8e0fe2cd5 100644
 --- a/sshd-session.c
 +++ b/sshd-session.c
-@@ -110,6 +110,13 @@
+@@ -103,6 +103,13 @@
  #include "srclimit.h"
  #include "dh.h"
  
@@ -119,8 +119,8 @@ index 03a028c82..f36d58b1b 100644
 +
  /* Re-exec fds */
  #define REEXEC_DEVCRYPTO_RESERVED_FD	(STDERR_FILENO + 1)
- #define REEXEC_STARTUP_PIPE_FD		(STDERR_FILENO + 2)
-@@ -1256,6 +1263,24 @@ main(int ac, char **av)
+ #define REEXEC_CONFIG_PASS_FD		(STDERR_FILENO + 2)
+@@ -1215,6 +1222,24 @@ main(int ac, char **av)
  #ifdef SSH_AUDIT_EVENTS
  	audit_connection_from(remote_ip, remote_port);
  #endif
@@ -146,7 +146,7 @@ index 03a028c82..f36d58b1b 100644
  	rdomain = ssh_packet_rdomain_in(ssh);
  
 diff --git a/sshd.8 b/sshd.8
-index 08ebf53a1..464d402f6 100644
+index 7fbca776a..1cec2fd2c 100644
 --- a/sshd.8
 +++ b/sshd.8
 @@ -925,6 +925,12 @@ the user's home directory becomes accessible.

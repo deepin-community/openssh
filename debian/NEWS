@@ -1,3 +1,118 @@
+openssh (1:10.1p1-1) unstable; urgency=medium
+
+  OpenSSH 10.1p1 includes a number of changes that may affect existing
+  configurations:
+
+   * ssh(1): add a warning when the connection negotiates a non-post quantum
+     key agreement algorithm.
+
+     This warning has been added due to the risk of "store now, decrypt
+     later" attacks. More details at https://openssh.com/pq.html
+
+     This warning may be controlled via a new WarnWeakCrypto ssh_config
+     option, defaulting to on. This option is likely to control additional
+     weak crypto warnings in the future.
+
+   * ssh(1), sshd(8): major changes to handling of DSCP marking/IPQoS
+
+     In both client and server the default DSCP (a.k.a IPQoS) values were
+     revised and the way these values are used during runtime has changed.
+
+     Interactive traffic is now assigned to the EF (Expedited Forwarding)
+     class by default. This provides more appropriate packet prioritisation
+     information for the intermediate network, such as wireless media (cf.
+     RFC 8325). Non-interactive traffic will now use the operating system
+     default DSCP marking. Both the interactive and non-interactive DSCP
+     values may be overridden via the IPQoS keyword, described in
+     ssh_config(5) and sshd_config(5).
+
+     The appropriate DSCP marking is now automatically selected and updated
+     as needed over the course of a connection's lifetime. ssh(1) and
+     sshd(8) will switch between the interactive and non-interactive IPQoS
+     values depending on the type of SSH channels open at the time. For
+     example, if an sftp session is using the connection alongside a shell
+     session, then the non- interactive value will be used for the duration
+     of the sftp. A connection which contains only interactive sessions is
+     marked EF.
+
+   * ssh(1), sshd(8): deprecate support for IPv4 type-of-service (ToS)
+     keywords in the IPQoS configuration directive.
+
+     Type of Service (ToS) was deprecated in the late nineties and replaced
+     with the Differentiated Services architecture, which has significant
+     advantages for operators because it offers more granularity.
+
+     OpenSSH switched its default IPQoS from ToS to DSCP values in 2018
+     (openssh-7.7).
+
+     IPQoS configurations with 'lowdelay', 'reliability', or 'throughput'
+     will be ignored and will instead use the system default QoS settings.
+     Additionally, a debug message will be logged about the deprecation with
+     a suggestion to use DSCP QoS instead.
+
+   * ssh-add(1): when adding certificates to an agent, set the expiry to the
+     certificate expiry time plus a short (5 min) grace period.
+
+     This will cause the agent to automatically remove certificates shortly
+     after they expire. A new ssh-add -N option disables this behaviour.
+
+   * All: remove experimental support for XMSS keys. This was never enabled
+     by default. We expect to implement a new post-quantum signature scheme
+     in the near future.
+
+   * ssh-agent(1), sshd(8): move agent listener sockets from /tmp to under
+     ~/.ssh/agent for both ssh-agent(1) and forwarded sockets in sshd(8).
+
+     This ensures processes that have restricted filesystem access that
+     includes /tmp do not ambiently have the ability to use keys in an
+     agent.
+
+     Moving the default directory has the consequence that the OS will no
+     longer clean up stale agent sockets, so ssh-agent now gains this
+     ability.
+
+     To support $HOME on NFS, the socket path includes a truncated hash of
+     the hostname. ssh-agent will, by default, only clean up sockets from
+     the same hostname.
+
+     ssh-agent(1) gains some new flags: -U suppresses the automatic cleanup
+     of stale sockets when it starts. -u forces a cleanup without keeping a
+     running agent, -uu forces a cleanup that ignores the hostname. -T makes
+     ssh-agent put the socket back in /tmp.
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 07 Oct 2025 22:07:19 +0100
+
+openssh (1:10.0p1-1) unstable; urgency=medium
+
+  OpenSSH 10.0p1 includes a number of changes that may affect existing
+  configurations:
+
+   * This release removes support for the weak DSA signature algorithm,
+     completing the deprecation process that began in 2015 (when DSA was
+     disabled by default) and repeatedly warned over the last 12 months.
+
+   * scp(1), sftp(1): pass "ControlMaster no" to ssh when invoked by scp &
+     sftp. This disables implicit session creation by these tools when
+     ControlMaster was set to yes/auto by configuration, which some users
+     found surprising. This change will not prevent scp/sftp from using an
+     existing multiplexing session if one had already been created.
+
+   * sshd(8): this release disables finite field (a.k.a modp) Diffie-Hellman
+     key exchange in sshd by default. Specifically, this removes the
+     "diffie-hellman-group*" and "diffie-hellman-group-exchange-*" methods
+     from the default KEXAlgorithms list. The client is unchanged and
+     continues to support these methods by default.
+
+   * sshd(8): this release removes the implicit fallback to compiled-in
+     groups for Diffie-Hellman Group Exchange KEX when the moduli file
+     exists but does not contain moduli within the client-requested range.
+     The fallback behaviour remains for the case where the moduli file does
+     not exist at all. This allows administrators more explicit control over
+     which DH groups will be selected, but can lead to connection failures
+     if the moduli file is edited incorrectly.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 11 Apr 2025 11:16:19 +0100
+
 openssh (1:9.9p1-1) unstable; urgency=medium
 
   OpenSSH 9.9p1 includes a number of changes that may affect existing

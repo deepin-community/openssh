@@ -1,46 +1,349 @@
-openssh (1:9.9p2-0deepin4) unstable; urgency=medium
+openssh (1:10.2p1-2) unstable; urgency=medium
 
-  * fix: filter Uos or uos for lsb_release -is.
+  * ssh-session-cleanup: Update pattern for sshd-session split in 9.8
+    (closes: #1117965).
+  * Link ssh against ssh-pkcs11.o directly (closes: #1117638, #1117720).
 
- -- liujianqiang <liujianqiang@uniontech.com>  Thu, 18 Sep 2025 13:47:33 +0800
+ -- Colin Watson <cjwatson@debian.org>  Fri, 17 Oct 2025 10:14:14 +0100
 
-openssh (1:9.9p2-0deepin3) unstable; urgency=medium
+openssh (1:10.2p1-1) unstable; urgency=medium
 
-  * feat: add sm support
+  * New upstream release:
+    - ssh-keygen(1): fix download of keys from PKCS#11 tokens.
 
- -- Liang Bo <liangbo@uniontech.com>  Fri, 01 Aug 2025 17:31:26 +0800
+ -- Colin Watson <cjwatson@debian.org>  Fri, 10 Oct 2025 14:50:27 +0100
 
-openssh (1:9.9p2-0deepin2) unstable; urgency=medium
+openssh (1:10.1p1-2) unstable; urgency=medium
 
-  * feat: add sw64 support
+  * Don't reuse c->isatty for signalling that the remote channel has a tty
+    attached (closes: #1117574, #1117594).
+  * Link ssh-keygen directly against ssh-pkcs11.c.
 
- -- Deepin Packages Builder <packages@deepin.org>  Wed, 18 Jun 2025 13:59:48 +0800
+ -- Colin Watson <cjwatson@debian.org>  Thu, 09 Oct 2025 00:54:25 +0100
 
-openssh (1:9.9p2-0deepin1) unstable; urgency=medium
+openssh (1:10.1p1-1) unstable; urgency=medium
 
-  * Update to 9.9p2, fixes CVE-2025-26465, CVE-2025-26466
-  * Refresh patches (mlkem768x25519-big-endian-{1,2}.patch)
+  [ Allison Karlitskaya ]
+  * sshd@.service: Support ephemeral keys from VM/container hosts.
 
- -- Tianyu Chen <sweetyfish@deepin.org>  Tue, 18 Feb 2025 18:13:26 +0800
+  [ Colin Watson ]
+  * New upstream release:
+    - ssh(1): add a warning when the connection negotiates a non-post
+      quantum key agreement algorithm.
+    - ssh(1), sshd(8): major changes to handling of DSCP marking/IPQoS: by
+      default, interactive traffic is assigned to the EF (Expedited
+      Forwarding) class, while non-interactive traffic uses the operating
+      system default DSCP marking.
+    - ssh(1), sshd(8): deprecate support for IPv4 type-of-service (ToS)
+      keywords in the IPQoS configuration directive.
+    - ssh-add(1): when adding certificates to an agent, set the expiry to
+      the certificate expiry time plus a short (5 min) grace period.
+    - All: remove experimental support for XMSS keys.
+    - ssh-agent(1), sshd(8): move agent listener sockets from /tmp to under
+      ~/.ssh/agent for both ssh-agent(1) and forwarded sockets in sshd(8).
+    - CVE-2025-61984: ssh(1): disallow control characters in usernames
+      passed via the commandline or expanded using %-sequences from the
+      configuration file (closes: #1117529),
+    - CVE-2025-61985: ssh(1): disallow \0 characters in ssh:// URIs (closes:
+      #1117530).
+    - ssh(1), sshd(8): add SIGINFO handlers to log active channel and
+      session information.
+    - sshd(8): when refusing a certificate for user authentication, log
+      enough information to identify the certificate in addition to the
+      reason why it was being denied. Makes debugging certificate
+      authorisation problems a bit easier.
+    - ssh(1), ssh-agent(1): support ed25519 keys hosted on PKCS#11 tokens.
+    - ssh(1): add an ssh_config(5) RefuseConnection option that, when
+      encountered while processing an active section in a configuration,
+      terminates ssh(1) with an error message that contains the argument to
+      the option.
+    - sshd(8): make the X11 display number check relative to
+      X11DisplayOffset. This will allow people to use X11DisplayOffset to
+      configure much higher port ranges if they really want, while not
+      changing the default behaviour.
+    - ssh(1): fix delay on X client startup when ObscureKeystrokeTiming is
+      enabled.
+    - sshd(8): increase the maximum size of the supported configuration from
+      256KB to 4MB, which ought to be enough for anybody. Fail early and
+      visibly when this limit is breached.
+    - sftp(1): during sftp uploads, avoid a condition where a failed write
+      could be ignored if a subsequent write succeeded. This is unlikely but
+      technically possible because sftp servers are allowed to reorder
+      requests.
+    - sshd(8): avoid a race condition when the sshd-auth process exits that
+      could cause a spurious error message to be logged.
+    - sshd(8): log at level INFO when PerSourcePenalties actually blocks
+      access to a source address range. Previously this was logged at level
+      VERBOSE, which hid enforcement actions under default config settings.
+    - sshd(8): Make the MaxStartups and PerSourceNetBlockSize options
+      first-match-wins as advertised.
+    - ssh(1): fix an incorrect return value check in the local forward
+      cancellation path that would cause failed cancellations not to be
+      logged.
+    - sshd(8): make "Match !final" not trigger a second parsing pass of
+      ssh_config (unless hostname canonicalisation or a separate "Match
+      final" does).
+    - ssh(1): better debug diagnostics when loading keys. Will now list key
+      fingerprint and algorithm (not just algorithm number) as well as
+      making it explicit which keys didn't load.
+    - All: fix a number of memory leaks found by LeakSanitizer, Coverity and
+      manual inspection.
+    - sshd(8): Output the current name for PermitRootLogin's
+      "prohibit-password" in sshd -T instead of its deprecated alias
+      "without-password" (closes: #1095922).
+    - ssh(1): make writing known_hosts lines more atomic by writing the
+      entire line in one operation and using unbuffered stdio.
+    - sshd(8): check the username didn't change during the PAM transactions.
+    - sshd(8): don't log audit messages with UNKNOWN hostname to avoid slow
+      DNS lookups in the audit subsystem.
+    - All: when making a copy of struct passwd, ensure struct fields are
+      non-NULL.
+    - sshd(8): handle futex_time64 properly in seccomp sandbox.
+    - Add contrib/gnome-ssh-askpass4 for GNOME 40+ using the GCR API.
+    - ssh-agent(1): exit 0 from SIGTERM under systemd socket-activation,
+      preventing a graceful shutdown of an agent via systemd from
+      incorrectly marking the service as "failed".
+  * Drop patches:
+    - no-openssl-version-status.patch: Mostly applied upstream; the rest
+      only applied to OpenSSL < 3, which isn't relevant to current Debian
+      releases.
+    - revert-ipqos-defaults.patch: This new upstream release reworks IPQoS,
+      so let's see how that works in Debian (closes: #1111446).
+  * debian/run-tests: Fix path to dropbear.
 
-openssh (1:9.9p1-3deepin2) unstable; urgency=medium
+ -- Colin Watson <cjwatson@debian.org>  Tue, 07 Oct 2025 22:07:19 +0100
 
-  [ liujianqiang ]
-  * ssh.service is disabled by default.
-  * update ChannelTimeout config to implement auto close inactive
-    connections.
+openssh (1:10.0p1-8) unstable; urgency=medium
 
- -- Tianyu Chen <sweetyfish@deepin.org>  Wed, 15 Jan 2025 14:50:47 +0800
+  * Remove some long-obsolete Conflicts (closes: #54243).
+  * Fix mistracking of MaxStartups process exits in some situations (closes:
+    #1080350).
 
-openssh (1:9.9p1-3deepin1) unstable; urgency=medium
+ -- Colin Watson <cjwatson@debian.org>  Sun, 10 Aug 2025 00:07:55 +0100
 
-  * Refresh and re-apply deepin patches:
-    deepin-extra-version.patch
-    deepin-ssh-connect-idle-timeout.patch
-    deepin-ssh-keygen-privatekey-file-perm.patch
-  * Update openssh-server.ucf-md5sum.
+openssh (1:10.0p1-7) unstable; urgency=medium
 
- -- Tianyu Chen <sweetyfish@deepin.org>  Wed, 15 Jan 2025 14:42:25 +0800
+  * Make postinst logic for cleaning up the sshd diversion more robust.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 01 Aug 2025 16:02:27 +0100
+
+openssh (1:10.0p1-6) unstable; urgency=medium
+
+  * Temporarily divert /usr/sbin/sshd during upgrades from before
+    1:9.8p1-1~, to avoid new connections failing between unpack and
+    configure (closes: #1109742).
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 28 Jul 2025 12:17:42 +0100
+
+openssh (1:10.0p1-5) unstable; urgency=medium
+
+  * Ensure that configure knows the path to passwd; fixes reproducibility of
+    openssh-tests.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 09 May 2025 13:40:49 +0100
+
+openssh (1:10.0p1-4) unstable; urgency=medium
+
+  [ Daniel Kahn Gillmor ]
+  * Add Requires=ssh-agent.socket to ssh-agent.service (closes: #1103522).
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 09 May 2025 10:16:45 +0100
+
+openssh (1:10.0p1-3) unstable; urgency=medium
+
+  * Disable --with-linux-memlock-onfault again, since it causes
+    RLIMIT_MEMLOCK to be exceeded with some combinations of PAM modules
+    (closes: #1103418).
+
+ -- Colin Watson <cjwatson@debian.org>  Wed, 07 May 2025 16:18:43 +0100
+
+openssh (1:10.0p1-2) unstable; urgency=medium
+
+  [ Colin Watson ]
+  * Disable --with-linux-memlock-onfault on riscv64.
+  * Build with wtmpdb (see #1102643).
+  * Stop writing /var/log/btmp, since nothing reads it any more (closes:
+    #1072184).
+  * Restore some rdomain references in sshd_config(5) where they're
+    supported on Linux, referring to ip-vrf(8) (closes: #1095686).
+
+  [ Daniel Kahn Gillmor ]
+  * Improve systemd user service socket activation (closes: #961311,
+    #1039919, #1103037).
+
+  [ Luca Boccassi ]
+  * Switch from adduser to sysusers.d.
+  * Add sshd-keygen service.
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 15 Apr 2025 14:19:35 +0100
+
+openssh (1:10.0p1-1) unstable; urgency=medium
+
+  [ Luca Boccassi ]
+  * Add COLORTERM NO_COLOR to SendEnv and AcceptEnv.
+
+  [ Colin Watson ]
+  * New upstream release:
+    - This release removes support for the weak DSA signature algorithm.
+    - scp(1), sftp(1): pass "ControlMaster no" to ssh when invoked by scp &
+      sftp.
+    - This release has the version number 10.0 and announces itself as
+      "SSH-2.0-OpenSSH_10.0". Software that naively matches versions using
+      patterns like "OpenSSH_1*" may be confused by this.
+    - sshd(8): this release removes the code responsible for the user
+      authentication phase of the protocol from the per-connection
+      sshd-session binary to a new sshd-auth binary. Splitting this code
+      into a separate binary ensures that the crucial pre-authentication
+      attack surface has an entirely disjoint address space from the code
+      used for the rest of the connection. It also yields a small runtime
+      memory saving as the authentication code will be unloaded after the
+      authentication phase completes. This change should be largely
+      invisible to users, though some log messages may now come from
+      "sshd-auth" instead of "sshd-session".
+    - sshd(8): this release disables finite field (a.k.a modp)
+      Diffie-Hellman key exchange in sshd by default. Specifically, this
+      removes the "diffie-hellman-group*" and
+      "diffie-hellman-group-exchange-*" methods from the default
+      KEXAlgorithms list. The client is unchanged and continues to support
+      these methods by default.
+    - sshd(8): this release removes the implicit fallback to compiled-in
+      groups for Diffie-Hellman Group Exchange KEX when the moduli file
+      exists but does not contain moduli within the client-requested range.
+      The fallback behaviour remains for the case where the moduli file does
+      not exist at all. This allows administrators more explicit control
+      over which DH groups will be selected, but can lead to connection
+      failures if the moduli file is edited incorrectly.
+    - CVE-2025-32728: sshd(8): fix the DisableForwarding directive, which
+      was failing to disable X11 forwarding and agent forwarding as
+      documented (closes: #1102603). X11 forwarding is disabled by default
+      in the server and agent forwarding is off by default in the client.
+    - ssh(1): the hybrid post-quantum algorithm mlkem768x25519-sha256 is now
+      used by default for key agreement. This algorithm is considered to be
+      safe against attack by quantum computers, is guaranteed to be no less
+      strong than the popular curve25519-sha256 algorithm, has been
+      standardised by NIST and is considerably faster than the previous
+      default.
+    - ssh(1): prefer AES-GCM to AES-CTR mode when selecting a cipher for the
+      connection. The default cipher preference list is now
+      Chacha20/Poly1305, AES-GCM (128/256) followed by AES-CTR
+      (128/192/256).
+    - ssh(1): add %-token and environment variable expansion to the
+      ssh_config SetEnv directive.
+    - ssh(1): allow %-token and environment variable expansion in the
+      ssh_config User directive, with the exception of %r and %C which would
+      be self-referential.
+    - ssh(1), sshd(8): add "Match version" support to ssh_config and
+      sshd_config. Allows matching on the local version of OpenSSH, e.g.
+      "Match version OpenSSH_10.*".
+    - ssh(1): add support for "Match sessiontype" to ssh_config. Allows
+      matching on the type of session initially requested, either "shell"
+      for interactive sessions, "exec" for command execution sessions,
+      "subsystem" for subsystem requests, such as sftp, or "none" for
+      transport/forwarding-only sessions.
+    - ssh(1): add support for "Match command ..." support to ssh_config,
+      allowing matching on the remote command as specified on the
+      command-line.
+    - ssh(1): allow 'Match tagged ""' and 'Match command ""' to match empty
+      tag and command values respectively.
+    - sshd(8): allow glob(3) patterns to be used in sshd_config
+      AuthorizedKeysFile and AuthorizedPrincipalsFile directives.
+    - sshd(1): support the VersionAddendum in the client, mirroring the
+      option of the same name in the server.
+    - ssh-agent(1): the agent will now delete all loaded keys when signaled
+      with SIGUSR1. This allows deletion of keys without having access to
+      $SSH_AUTH_SOCK.
+    - Portable OpenSSH, ssh-agent(1): support systemd-style socket
+      activation in ssh-agent using the LISTEN_PID/LISTEN_FDS mechanism.
+      Activated when these environment variables are set, the agent is
+      started with the -d or -D option and no socket path is set.
+    - ssh-keygen(1): support FIDO tokens that return no attestation data,
+      e.g. recent WinHello.
+    - ssh-agent(1): add a "-Owebsafe-allow=..." option to allow the default
+      FIDO application ID allow-list to be overridden.
+    - ssh-keygen(1): allow "-" as output file for moduli screening.
+    - sshd(8): remove assumption that the sshd_config and any configs it
+      includes can fit in a (possibly enlarged) socket buffer. Previously it
+      was possible to create a sufficiently large configuration that could
+      cause sshd to fail to accept any connection. sshd(8) will now actively
+      manage sending its config to the sshd-session sub-process.
+    - ssh(1): don't start the ObscureKeystrokeTiming mitigations if there
+      has been traffic on a X11 forwarding channel recently. Should fix X11
+      forwarding performance problems when this setting is enabled.
+    - ssh(1): prohibit the comma character in hostnames accepted, but allow
+      an underscore as the first character in a hostname.
+    - sftp(1): set high-water when resuming a "put". Prevents bogus "server
+      reordered acks" debug message.
+    - ssh(1), sshd(8): fix regression in openssh-9.8, which would fail to
+      accept "Match criteria=argument" as well as the documented "Match
+      criteria argument" syntax in ssh_config and sshd_config.
+    - sftp(1), ssh(1): fix a number of possible NULL dereference bugs,
+      including Coverity CIDs 405019 and 477813.
+    - sshd(8): fix PerSourcePenalty incorrectly using "crash" penalty when
+      LoginGraceTime was exceeded.
+    - sshd(8): fix "Match invalid-user" from incorrectly being activated in
+      initial configuration pass when no other predicates were present on
+      the match line.
+    - sshd(8): fix debug logging of user specific delay.
+    - sshd(8): improve debug logging across sub-process boundaries.
+      Previously some log messages were lost early in the sshd-auth and
+      sshd-session processes' life.
+    - ssh(1): require control-escape character sequences passed via the '-e
+      ^x' command-line to be exactly two characters long. Avoids one byte
+      out-of-bounds read if ssh is invoked as "ssh -e^ ...".
+    - ssh(1), sshd(8): prevent integer overflow in x11 port handling. These
+      are theoretically possible if the admin misconfigured X11DisplayOffset
+      or the user misconfigures their own $DISPLAY, but don't happen in
+      normal operation.
+    - ssh-keygen(1): don't mess up ssh-keygen -l output when the file
+      contains CR characters.
+    - sshd(8): add rate limits to logging of connections dropped by
+      PerSourcePenalties. Previously these could be noisy in logs.
+    - ssh(1): fix argument of "Compression" directive in ssh -G config dump,
+      which regressed in openssh-9.8.
+    - sshd(8): fix a corner-case triggered by UpdateHostKeys when sshd
+      refuses to accept the signature returned by an agent holding host keys
+      during the hostkey rotation sub-protocol. This situation could occur
+      in situations where a PKCS#11 smartcard that lacked support for
+      particular signature algorithms was used to store host keys.
+    - ssh-keygen(1): when using RSA keys to sign messages with "ssh-keygen
+      -Y", select the signature algorithm based on the requested hash
+      algorithm ("-Ohashalg=xxx"). This allows using something other than
+      the default of rsa-sha2-512, which may not be supported on all signing
+      backends, e.g. some smartcards only support SHA256.
+    - sshd(8): add wtmpdb support as a Y2038 safe wtmp replacement.
+    - sshd(8): add support for locking sshd into memory, enabled with the
+      --with-linux-memlock-onfault configure flag.
+  * Configure --with-linux-memlock-onfault on Linux.
+
+ -- Colin Watson <cjwatson@debian.org>  Fri, 11 Apr 2025 16:00:55 +0100
+
+openssh (1:9.9p2-2) unstable; urgency=medium
+
+  * Simplify most autopkgtests using needs-sudo restriction.
+  * Remove obsolete slogin symlink (closes: #1098760).
+  * Check if dbclient supports SHA1 before trying SHA1-based KEX (closes:
+    #1100948).
+
+ -- Colin Watson <cjwatson@debian.org>  Thu, 20 Mar 2025 23:12:58 +0000
+
+openssh (1:9.9p2-1) unstable; urgency=medium
+
+  * New upstream release:
+    - CVE-2025-26465: ssh(1) in OpenSSH versions 6.8p1 to 9.9p1 (inclusive)
+      contained a logic error that allowed an on-path attacker (a.k.a MITM)
+      to impersonate any server when the VerifyHostKeyDNS option is enabled.
+      This option is off by default.
+    - CVE-2025-26466: sshd(8) in OpenSSH versions 9.5p1 to 9.9p1 (inclusive)
+      is vulnerable to a memory/CPU denial-of-service related to the
+      handling of SSH2_MSG_PING packets. This condition may be mitigated
+      using the existing PerSourcePenalties feature.
+    - ssh(1), sshd(8): fix regression in Match directive that caused
+      failures when predicates and their arguments were separated by '='
+      characters instead of whitespace (bz3739).
+    - sshd(8): fix the "Match invalid-user" predicate, which was matching
+      incorrectly in the initial pass of config evaluation.
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 18 Feb 2025 10:13:10 +0000
 
 openssh (1:9.9p1-3) unstable; urgency=medium
 
