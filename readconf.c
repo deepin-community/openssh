@@ -1,4 +1,4 @@
-/* $OpenBSD: readconf.c,v 1.392 2024/09/26 23:55:08 djm Exp $ */
+/* $OpenBSD: readconf.c,v 1.406 2025/08/29 03:50:38 djm Exp $ */
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -29,14 +29,10 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#ifdef HAVE_IFADDRS_H
-# include <ifaddrs.h>
-#endif
+#include <ifaddrs.h>
 #include <limits.h>
 #include <netdb.h>
-#ifdef HAVE_PATHS_H
-# include <paths.h>
-#endif
+#include <paths.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -48,9 +44,7 @@
 #else
 # include "openbsd-compat/glob.h"
 #endif
-#ifdef HAVE_UTIL_H
 #include <util.h>
-#endif
 #if defined(HAVE_STRNVIS) && defined(HAVE_VIS_H) && !defined(BROKEN_STRNVIS)
 # include <vis.h>
 #endif
@@ -70,6 +64,7 @@
 #include "uidswap.h"
 #include "myproposal.h"
 #include "digest.h"
+#include "version.h"
 
 /* Format of the configuration file:
 
@@ -133,11 +128,11 @@
 */
 
 static int read_config_file_depth(const char *filename, struct passwd *pw,
-    const char *host, const char *original_host, Options *options,
-    int flags, int *activep, int *want_final_pass, int depth);
+    const char *host, const char *original_host, const char *remote_command,
+    Options *options, int flags, int *activep, int *want_final_pass, int depth);
 static int process_config_line_depth(Options *options, struct passwd *pw,
-    const char *host, const char *original_host, char *line,
-    const char *filename, int linenum, int *activep, int flags,
+    const char *host, const char *original_host, const char *remote_command,
+    char *line, const char *filename, int linenum, int *activep, int flags,
     int *want_final_pass, int depth);
 
 /* Keyword tokens. */
@@ -179,6 +174,7 @@ typedef enum {
 	oPubkeyAcceptedAlgorithms, oCASignatureAlgorithms, oProxyJump,
 	oSecurityKeyProvider, oKnownHostsCommand, oRequiredRSASize,
 	oEnableEscapeCommandline, oObscureKeystrokeTiming, oChannelTimeout,
+	oVersionAddendum, oRefuseConnection, oWarnWeakCrypto,
 	oIgnore, oIgnoredUnknownOption, oDeprecated, oUnsupported
 } OpCodes;
 
@@ -329,6 +325,9 @@ static struct {
 	{ "enableescapecommandline", oEnableEscapeCommandline },
 	{ "obscurekeystroketiming", oObscureKeystrokeTiming },
 	{ "channeltimeout", oChannelTimeout },
+	{ "versionaddendum", oVersionAddendum },
+	{ "refuseconnection", oRefuseConnection },
+	{ "warnweakcrypto", oWarnWeakCrypto },
 
 	{ NULL, oBadOption }
 };
@@ -708,7 +707,8 @@ expand_match_exec_or_include_path(const char *path, Options *options,
 static int
 match_cfg_line(Options *options, const char *full_line, int *acp, char ***avp,
     struct passwd *pw, const char *host_arg, const char *original_host,
-    int final_pass, int *want_final_pass, const char *filename, int linenum)
+    const char *remote_command, int final_pass, int *want_final_pass,
+    const char *filename, int linenum)
 {
 	char *arg, *oattrib = NULL, *attrib = NULL, *cmd, *host, *criteria;
 	const char *ruser;
@@ -764,12 +764,13 @@ match_cfg_line(Options *options, const char *full_line, int *acp, char ***avp,
 		if (strcasecmp(attrib, "canonical") == 0 ||
 		    strcasecmp(attrib, "final") == 0) {
 			/*
-			 * If the config requests "Match final" then remember
-			 * this so we can perform a second pass later.
+			 * If the config requests "Match final" without
+			 * negation then remember this so we can perform a
+			 * second pass later.
 			 */
 			if (strcasecmp(attrib, "final") == 0 &&
 			    want_final_pass != NULL)
-				*want_final_pass = 1;
+				*want_final_pass |= !negate;
 			r = !!final_pass;  /* force bitmask member to boolean */
 			if (r == (negate ? 1 : 0))
 				this_result = result = 0;
@@ -785,16 +786,29 @@ match_cfg_line(Options *options, const char *full_line, int *acp, char ***avp,
 		    strprefix(attrib, "user=", 1) != NULL ||
 		    strprefix(attrib, "localuser=", 1) != NULL ||
 		    strprefix(attrib, "localnetwork=", 1) != NULL ||
+		    strprefix(attrib, "version=", 1) != NULL ||
 		    strprefix(attrib, "tagged=", 1) != NULL ||
+		    strprefix(attrib, "command=", 1) != NULL ||
 		    strprefix(attrib, "exec=", 1) != NULL) {
 			arg = strchr(attrib, '=');
 			*(arg++) = '\0';
-		} else {
-			arg = argv_next(acp, avp);
+		} else if ((arg = argv_next(acp, avp)) == NULL) {
+			error("%.200s line %d: missing argument for Match '%s'",
+			    filename, linenum, oattrib);
+			result = -1;
+			goto out;
 		}
 
-		/* All other criteria require an argument */
-		if (arg == NULL || *arg == '\0' || *arg == '#') {
+		/*
+		 * All other criteria require an argument, though it may
+		 * be the empty string for the "tagged" and "command"
+		 * options.
+		 */
+		if (*arg == '\0' &&
+		    strcasecmp(attrib, "tagged") != 0 &&
+		    strcasecmp(attrib, "command") != 0)
+			arg = NULL;
+		if (arg == NULL || *arg == '#') {
 			error("Missing Match criteria for %s", attrib);
 			result = -1;
 			goto out;
@@ -828,9 +842,37 @@ match_cfg_line(Options *options, const char *full_line, int *acp, char ***avp,
 			r = check_match_ifaddrs(arg) == 1;
 			if (r == (negate ? 1 : 0))
 				this_result = result = 0;
+		} else if (strcasecmp(attrib, "version") == 0) {
+			criteria = xstrdup(SSH_RELEASE);
+			r = match_pattern_list(SSH_RELEASE, arg, 0) == 1;
+			if (r == (negate ? 1 : 0))
+				this_result = result = 0;
 		} else if (strcasecmp(attrib, "tagged") == 0) {
 			criteria = xstrdup(options->tag == NULL ? "" :
 			    options->tag);
+			/* Special case: empty criteria matches empty arg */
+			r = (*criteria == '\0') ? *arg == '\0' :
+			    match_pattern_list(criteria, arg, 0) == 1;
+			if (r == (negate ? 1 : 0))
+				this_result = result = 0;
+		} else if (strcasecmp(attrib, "command") == 0) {
+			criteria = xstrdup(remote_command == NULL ?
+			    "" : remote_command);
+			/* Special case: empty criteria matches empty arg */
+			r = (*criteria == '\0') ? *arg == '\0' :
+			    match_pattern_list(criteria, arg, 0) == 1;
+			if (r == (negate ? 1 : 0))
+				this_result = result = 0;
+		} else if (strcasecmp(attrib, "sessiontype") == 0) {
+			if (options->session_type == SESSION_TYPE_SUBSYSTEM)
+				criteria = xstrdup("subsystem");
+			else if (options->session_type == SESSION_TYPE_NONE)
+				criteria = xstrdup("none");
+			else if (remote_command != NULL &&
+			    *remote_command != '\0')
+				criteria = xstrdup("exec");
+			else
+				criteria = xstrdup("shell");
 			r = match_pattern_list(criteria, arg, 0) == 1;
 			if (r == (negate ? 1 : 0))
 				this_result = result = 0;
@@ -1054,6 +1096,15 @@ static const struct multistate multistate_compression[] = {
 	{ "no",				COMP_NONE },
 	{ NULL, -1 }
 };
+/* XXX this will need to be replaced with a bitmask if we add more flags */
+static const struct multistate multistate_warnweakcrypto[] = {
+	{ "true",			1 },
+	{ "false",			0 },
+	{ "yes",			1 },
+	{ "no",				0 },
+	{ "no-pq-kex",			0 },
+	{ NULL, -1 }
+};
 
 static int
 parse_multistate_value(const char *arg, const char *filename, int linenum,
@@ -1078,18 +1129,19 @@ parse_multistate_value(const char *arg, const char *filename, int linenum,
  */
 int
 process_config_line(Options *options, struct passwd *pw, const char *host,
-    const char *original_host, char *line, const char *filename,
-    int linenum, int *activep, int flags)
+    const char *original_host, const char *remote_command, char *line,
+    const char *filename, int linenum, int *activep, int flags)
 {
 	return process_config_line_depth(options, pw, host, original_host,
-	    line, filename, linenum, activep, flags, NULL, 0);
+	    remote_command, line, filename, linenum, activep, flags, NULL, 0);
 }
 
 #define WHITESPACE " \t\r\n"
 static int
 process_config_line_depth(Options *options, struct passwd *pw, const char *host,
-    const char *original_host, char *line, const char *filename,
-    int linenum, int *activep, int flags, int *want_final_pass, int depth)
+    const char *original_host, const char *remote_command, char *line,
+    const char *filename, int linenum, int *activep, int flags,
+    int *want_final_pass, int depth)
 {
 	char *str, **charptr, *endofnumber, *keyword, *arg, *arg2, *p;
 	char **cpptr, ***cppptr, fwdarg[256];
@@ -1826,8 +1878,8 @@ parse_pubkey_algos:
 			goto out;
 		}
 		value = match_cfg_line(options, str, &ac, &av, pw, host,
-		    original_host, flags & SSHCONF_FINAL, want_final_pass,
-		    filename, linenum);
+		    original_host, remote_command, flags & SSHCONF_FINAL,
+		    want_final_pass, filename, linenum);
 		if (value < 0) {
 			error("%.200s line %d: Bad Match condition", filename,
 			    linenum);
@@ -2079,8 +2131,8 @@ parse_pubkey_algos:
 				    gl.gl_pathv[i], depth,
 				    oactive ? "" : " (parse only)");
 				r = read_config_file_depth(gl.gl_pathv[i],
-				    pw, host, original_host, options,
-				    flags | SSHCONF_CHECKPERM |
+				    pw, host, original_host, remote_command,
+				    options, flags | SSHCONF_CHECKPERM |
 				    (oactive ? 0 : SSHCONF_NEVERMATCH),
 				    activep, want_final_pass, depth + 1);
 				if (r != 1 && errno != ENOENT) {
@@ -2112,6 +2164,12 @@ parse_pubkey_algos:
 			    filename, linenum, arg);
 			goto out;
 		}
+		if (value == INT_MIN) {
+			debug("%s line %d: Deprecated IPQoS value \"%s\" "
+			    "ignored - using system default instead. Consider"
+			    " using DSCP values.", filename, linenum, arg);
+			value = INT_MAX;
+		}
 		arg = argv_next(&ac, &av);
 		if (arg == NULL)
 			value2 = value;
@@ -2119,6 +2177,12 @@ parse_pubkey_algos:
 			error("%s line %d: Bad IPQoS value: %s",
 			    filename, linenum, arg);
 			goto out;
+		}
+		if (value2 == INT_MIN) {
+			debug("%s line %d: Deprecated IPQoS value \"%s\" "
+			    "ignored - using system default instead. Consider"
+			    " using DSCP values.", filename, linenum, arg);
+			value2 = INT_MAX;
 		}
 		if (*activep && options->ip_qos_interactive == -1) {
 			options->ip_qos_interactive = value;
@@ -2367,6 +2431,11 @@ parse_pubkey_algos:
 		intptr = &options->required_rsa_size;
 		goto parse_int;
 
+	case oWarnWeakCrypto:
+		intptr = &options->warn_weak_crypto;
+		multistate_ptr = multistate_warnweakcrypto;
+		goto parse_multistate;
+
 	case oObscureKeystrokeTiming:
 		value = -1;
 		while ((arg = argv_next(&ac, &av)) != NULL) {
@@ -2440,6 +2509,41 @@ parse_pubkey_algos:
 		}
 		break;
 
+	case oVersionAddendum:
+		if (str == NULL || *str == '\0')
+			fatal("%s line %d: %s missing argument.",
+			    filename, linenum, keyword);
+		len = strspn(str, WHITESPACE);
+		if (strchr(str + len, '\r') != NULL) {
+			fatal("%.200s line %d: Invalid %s argument",
+			    filename, linenum, keyword);
+		}
+		if ((arg = strchr(line, '#')) != NULL) {
+			*arg = '\0';
+			rtrim(line);
+		}
+		if (*activep && options->version_addendum == NULL) {
+			if (strcasecmp(str + len, "none") == 0)
+				options->version_addendum = xstrdup("");
+			else
+				options->version_addendum = xstrdup(str + len);
+		}
+		argv_consume(&ac);
+		break;
+
+	case oRefuseConnection:
+		arg = argv_next(&ac, &av);
+		if (!arg || *arg == '\0') {
+			error("%.200s line %d: Missing argument.",
+			    filename, linenum);
+			goto out;
+		}
+		if (*activep) {
+			fatal("%.200s line %d: RefuseConnection: %s",
+			    filename, linenum, arg);
+		}
+		break;
+
 	case oDeprecated:
 		debug("%s line %d: Deprecated option \"%s\"",
 		    filename, linenum, keyword);
@@ -2481,20 +2585,20 @@ parse_pubkey_algos:
  */
 int
 read_config_file(const char *filename, struct passwd *pw, const char *host,
-    const char *original_host, Options *options, int flags,
+    const char *original_host, const char *remote_command, Options *options, int flags,
     int *want_final_pass)
 {
 	int active = 1;
 
 	return read_config_file_depth(filename, pw, host, original_host,
-	    options, flags, &active, want_final_pass, 0);
+	    remote_command, options, flags, &active, want_final_pass, 0);
 }
 
 #define READCONF_MAX_DEPTH	16
 static int
 read_config_file_depth(const char *filename, struct passwd *pw,
-    const char *host, const char *original_host, Options *options,
-    int flags, int *activep, int *want_final_pass, int depth)
+    const char *host, const char *original_host, const char *remote_command,
+    Options *options, int flags, int *activep, int *want_final_pass, int depth)
 {
 	FILE *f;
 	char *line = NULL;
@@ -2534,8 +2638,8 @@ read_config_file_depth(const char *filename, struct passwd *pw,
 		 * line numbers later for error messages.
 		 */
 		if (process_config_line_depth(options, pw, host, original_host,
-		    line, filename, linenum, activep, flags, want_final_pass,
-		    depth) != 0)
+		    remote_command, line, filename, linenum, activep, flags,
+		    want_final_pass, depth) != 0)
 			bad_options++;
 	}
 	free(line);
@@ -2691,11 +2795,13 @@ initialize_options(Options * options)
 	options->pubkey_accepted_algos = NULL;
 	options->known_hosts_command = NULL;
 	options->required_rsa_size = -1;
+	options->warn_weak_crypto = -1;
 	options->enable_escape_commandline = -1;
 	options->obscure_keystroke_timing_interval = -1;
 	options->tag = NULL;
 	options->channel_timeouts = NULL;
 	options->num_channel_timeouts = 0;
+	options->version_addendum = NULL;
 }
 
 /*
@@ -2799,10 +2905,6 @@ fill_default_options(Options * options)
 		    _PATH_SSH_CLIENT_ID_ED25519, 0);
 		add_identity_file(options, "~/",
 		    _PATH_SSH_CLIENT_ID_ED25519_SK, 0);
-		add_identity_file(options, "~/", _PATH_SSH_CLIENT_ID_XMSS, 0);
-#ifdef WITH_DSA
-		add_identity_file(options, "~/", _PATH_SSH_CLIENT_ID_DSA, 0);
-#endif
 	}
 	if (options->escape_char == -1)
 		options->escape_char = '~';
@@ -2866,9 +2968,9 @@ fill_default_options(Options * options)
 	if (options->visual_host_key == -1)
 		options->visual_host_key = 0;
 	if (options->ip_qos_interactive == -1)
-		options->ip_qos_interactive = IPTOS_DSCP_AF21;
+		options->ip_qos_interactive = IPTOS_DSCP_EF;
 	if (options->ip_qos_bulk == -1)
-		options->ip_qos_bulk = IPTOS_DSCP_CS1;
+		options->ip_qos_bulk = IPTOS_DSCP_CS0;
 	if (options->request_tty == -1)
 		options->request_tty = REQUEST_TTY_AUTO;
 	if (options->session_type == -1)
@@ -2896,6 +2998,8 @@ fill_default_options(Options * options)
 #endif
 	if (options->required_rsa_size == -1)
 		options->required_rsa_size = SSH_RSA_MINIMUM_MODULUS_SIZE;
+	if (options->warn_weak_crypto == -1)
+		options->warn_weak_crypto = 1;
 	if (options->enable_escape_commandline == -1)
 		options->enable_escape_commandline = 0;
 	if (options->obscure_keystroke_timing_interval == -1) {
@@ -2923,6 +3027,7 @@ fill_default_options(Options * options)
 			goto fail; \
 		} \
 	} while (0)
+	options->kex_algorithms_set = options->kex_algorithms != NULL;
 	ASSEMBLE(ciphers, def_cipher, all_cipher);
 	ASSEMBLE(macs, def_mac, all_mac);
 	ASSEMBLE(kex_algorithms, def_kex, all_kex);
@@ -3410,6 +3515,8 @@ fmt_intarg(OpCodes code, int val)
 	switch (code) {
 	case oAddressFamily:
 		return fmt_multistate_int(val, multistate_addressfamily);
+	case oCompression:
+		return fmt_multistate_int(val, multistate_compression);
 	case oVerifyHostKeyDNS:
 	case oUpdateHostkeys:
 		return fmt_multistate_int(val, multistate_yesnoask);
@@ -3608,6 +3715,7 @@ dump_client_config(Options *o, const char *host)
 	dump_cfg_fmtint(oVisualHostKey, o->visual_host_key);
 	dump_cfg_fmtint(oUpdateHostkeys, o->update_hostkeys);
 	dump_cfg_fmtint(oEnableEscapeCommandline, o->enable_escape_commandline);
+	dump_cfg_fmtint(oWarnWeakCrypto, o->warn_weak_crypto);
 
 	/* Integer options */
 	dump_cfg_int(oCanonicalizeMaxDots, o->canonicalize_max_dots);
@@ -3647,6 +3755,7 @@ dump_client_config(Options *o, const char *host)
 	dump_cfg_string(oXAuthLocation, o->xauth_location);
 	dump_cfg_string(oKnownHostsCommand, o->known_hosts_command);
 	dump_cfg_string(oTag, o->tag);
+	dump_cfg_string(oVersionAddendum, o->version_addendum);
 
 	/* Forwards */
 	dump_cfg_forwards(oDynamicForward, o->num_local_forwards, o->local_forwards);

@@ -1,27 +1,23 @@
 #! /bin/sh
 set -e
 
-testuser="testuser$$"
-adduser --quiet --disabled-password --gecos "" "$testuser"
-runuser -u "$testuser" -- mkdir -m700 "/home/$testuser/.ssh"
-runuser -u "$testuser" -- \
-	ssh-keygen -t ed25519 -N '' -f "/home/$testuser/.ssh/id_ed25519"
-runuser -u "$testuser" -- \
-	cp "/home/$testuser/.ssh/id_ed25519.pub" \
-	"/home/$testuser/.ssh/authorized_keys"
+sudo chsh -s /bin/bash "$(id -un)"
+mkdir -m700 "$HOME/.ssh"
+ssh-keygen -t ed25519 -N '' -f "$HOME/.ssh/id_ed25519"
+cp "$HOME/.ssh/id_ed25519.pub" "$HOME/.ssh/authorized_keys"
 
 cleanup () {
 	if [ $? -ne 0 ]; then
 		echo "## Something failed"
 		echo
 		echo "## ssh server log"
-		journalctl -b -u ssh.service --lines 100
+		sudo journalctl -b -u ssh.service --lines 100
 	fi
 }
 
 trap cleanup EXIT
 
-cat >/etc/xinetd.d/sshd <<EOF
+sudo tee /etc/xinetd.d/sshd >/dev/null <<EOF
 service ssh
 {
 	id		= sshd
@@ -39,14 +35,13 @@ service ssh
 }
 EOF
 
-mkdir -p /etc/systemd/system/xinetd.service.d
-cat >/etc/systemd/system/xinetd.service.d/sshd.conf <<EOF
+sudo mkdir -p /etc/systemd/system/xinetd.service.d
+sudo tee /etc/systemd/system/xinetd.service.d/sshd.conf >/dev/null <<EOF
 [Service]
 RuntimeDirectory=sshd
 EOF
 
-systemctl daemon-reload
-systemctl disable --now ssh.service
-systemctl reload xinetd.service
-runuser -u "$testuser" -- \
-	ssh -oStrictHostKeyChecking=accept-new "$testuser@localhost" date
+sudo systemctl daemon-reload
+sudo systemctl disable --now ssh.service
+sudo systemctl reload xinetd.service
+ssh -oStrictHostKeyChecking=accept-new "$(id -un)@localhost" date

@@ -32,10 +32,6 @@ else
   RUN_TESTS :=
 endif
 
-ifeq ($(DEB_BUILD_ARCH), sw64)
-  CFLAGS += -fwrapv -fno-strict-overflow
-endif
-
 # Change the version string to reflect distribution
 SSH_EXTRAVERSION := $(DEB_VENDOR)-$(shell echo '$(DEB_VERSION)' | sed -e 's/.*-//; s/+salsaci+.*/+salsaci/')
 
@@ -78,6 +74,10 @@ ifeq ($(DEB_HOST_ARCH),ppc64el)
 confflags += ossh_cv_cflag__fzero_call_used_regs_used=no
 endif
 
+# passwd isn't otherwise needed and may not be installed at build time.
+# Ensure that sshd knows its path.
+confflags += PATH_PASSWD_PROG=/usr/bin/passwd
+
 # Everything above here is common to the deb and udeb builds.
 confflags_udeb := $(confflags)
 
@@ -87,6 +87,7 @@ confflags += --with-pam
 confflags += --with-libedit
 confflags += --with-kerberos5=/usr
 confflags += --with-ssl-engine
+confflags += --with-wtmpdb
 ifeq ($(DEB_HOST_ARCH_OS),linux)
 confflags += --with-selinux
 confflags += --with-audit=linux
@@ -131,6 +132,13 @@ ifeq ($(filter noudeb,$(DEB_BUILD_PROFILES)),)
 	cd debian/build-udeb && ./config.status
 endif
 
+	# Nothing reads /var/log/btmp any more (see
+	# https://bugs.debian.org/1072184).
+	perl -pi -e 's,.*#define USE_BTMP .*,/* #undef USE_BTMP */,' debian/build-deb/config.h
+ifeq ($(filter noudeb,$(DEB_BUILD_PROFILES)),)
+	perl -pi -e 's,.*#define USE_BTMP .*,/* #undef USE_BTMP */,' debian/build-udeb/config.h
+endif
+
 override_dh_auto_configure-indep:
 
 override_dh_auto_build-arch:
@@ -138,7 +146,7 @@ override_dh_auto_build-arch:
 	$(MAKE) -C debian/build-deb regress-prep
 	$(MAKE) -C debian/build-deb $(PARALLEL) regress-binaries regress-unit-binaries
 ifeq ($(filter noudeb,$(DEB_BUILD_PROFILES)),)
-	$(MAKE) -C debian/build-udeb $(PARALLEL) ASKPASS_PROGRAM='/usr/bin/ssh-askpass' ssh scp sftp sshd ssh-keygen sshd-session
+	$(MAKE) -C debian/build-udeb $(PARALLEL) ASKPASS_PROGRAM='/usr/bin/ssh-askpass' ssh scp sftp sshd ssh-keygen sshd-auth sshd-session
 endif
 
 ifeq ($(filter pkg.openssh.nognome,$(DEB_BUILD_PROFILES)),)
@@ -182,10 +190,6 @@ ifeq ($(filter noudeb,$(DEB_BUILD_PROFILES)),)
 		--sourcedir=debian/build-udeb
 endif
 
-	# This can't be done using dh_link, because it's needed earlier by
-	# dh_installalternatives.
-	ln -sf ssh debian/openssh-client/usr/bin/slogin
-
 	rm -f debian/openssh-tests/usr/lib/openssh/regress/misc/sk-dummy/*.lo
 
 override_dh_installdocs:
@@ -198,14 +202,15 @@ override_dh_installdocs:
 override_dh_installinit:
 	dh_installinit -R --name ssh
 
+# Can be dropped in compat level 14
+execute_after_dh_installinit:
+	dh_installsysusers
+
 override_dh_installsystemd:
-ifneq (,$(filter uos Uos,$(shell lsb_release -i -s)))
-	dh_installsystemd -popenssh-server --no-enable ssh.service
-else
 	dh_installsystemd -popenssh-server ssh.service
-endif
 	dh_installsystemd -popenssh-server --no-enable ssh.socket
 	dh_installsystemd -popenssh-server --no-start rescue-ssh.target
+	dh_installsystemd -popenssh-server sshd-keygen.service
 
 debian/openssh-server.sshd.pam: debian/openssh-server.sshd.pam.in
 ifeq ($(DEB_HOST_ARCH_OS),linux)

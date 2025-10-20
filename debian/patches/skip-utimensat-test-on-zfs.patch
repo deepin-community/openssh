@@ -1,4 +1,4 @@
-From 956df1764a7c31f5250122ee0642adf561b6ca41 Mon Sep 17 00:00:00 2001
+From 3c0f5dd2c5d06d13dec414a39107a86f28be8ecb Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@debian.org>
 Date: Mon, 11 Mar 2024 16:24:49 +0000
 Subject: Skip utimensat test on ZFS
@@ -15,7 +15,7 @@ Patch-Name: skip-utimensat-test-on-zfs.patch
  1 file changed, 17 insertions(+)
 
 diff --git a/openbsd-compat/regress/utimensattest.c b/openbsd-compat/regress/utimensattest.c
-index bbc66c485..662d58146 100644
+index b4405e464..1bd72f5c7 100644
 --- a/openbsd-compat/regress/utimensattest.c
 +++ b/openbsd-compat/regress/utimensattest.c
 @@ -33,6 +33,12 @@

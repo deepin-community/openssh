@@ -114,11 +114,6 @@ AC_C_INLINE
 
 AC_CHECK_DECL([LLONG_MAX], [have_llong_max=1], , [#include <limits.h>])
 AC_CHECK_DECL([LONG_LONG_MAX], [have_long_long_max=1], , [#include <limits.h>])
-AC_CHECK_DECL([SYSTR_POLICY_KILL], [have_systr_policy_kill=1], , [
-	#include <sys/types.h>
-	#include <sys/param.h>
-	#include <dev/systrace.h>
-])
 AC_CHECK_DECL([RLIMIT_NPROC],
     [AC_DEFINE([HAVE_RLIMIT_NPROC], [], [sys/resource.h has RLIMIT_NPROC])], , [
 	#include <sys/types.h>
@@ -462,7 +457,6 @@ AC_CHECK_HEADERS([ \
 	crypt.h \
 	crypto/sha2.h \
 	dirent.h \
-	endian.h \
 	elf.h \
 	err.h \
 	features.h \
@@ -473,7 +467,6 @@ AC_CHECK_HEADERS([ \
 	glob.h \
 	ia.h \
 	iaf.h \
-	ifaddrs.h \
 	inttypes.h \
 	langinfo.h \
 	limits.h \
@@ -483,10 +476,7 @@ AC_CHECK_HEADERS([ \
 	ndir.h \
 	net/if_tun.h \
 	netdb.h \
-	netgroup.h \
 	pam/pam_appl.h \
-	paths.h \
-	poll.h \
 	pty.h \
 	readpassphrase.h \
 	rpc/types.h \
@@ -494,7 +484,6 @@ AC_CHECK_HEADERS([ \
 	sha2.h \
 	shadow.h \
 	stddef.h \
-	stdint.h \
 	string.h \
 	strings.h \
 	sys/bitypes.h \
@@ -519,21 +508,63 @@ AC_CHECK_HEADERS([ \
 	sys/strtio.h \
 	sys/statvfs.h \
 	sys/sysmacros.h \
-	sys/time.h \
 	sys/timers.h \
 	sys/vfs.h \
-	time.h \
 	tmpdir.h \
 	ttyent.h \
 	ucred.h \
 	unistd.h \
 	usersec.h \
-	util.h \
 	utime.h \
 	utmp.h \
 	utmpx.h \
 	vis.h \
 	wchar.h \
+])
+
+# Create replacement header files for common headers that are missing on this
+# platform.  Usually these are just empty, but in some cases they'll include
+# the equivalent file.  This avoids having to wrap those includes in
+# '#ifdef HAVE_FOO_H'.  If we create any such headers, add the path to includes.
+COMPATINCLUDES=""
+AC_CHECK_HEADERS([ \
+    endian.h \
+    ifaddrs.h \
+    libgen.h \
+    paths.h \
+    netgroup.h \
+    nlist.h \
+    poll.h \
+    stdint.h \
+    sys/mman.h \
+    sys/stat.h \
+    sys/time.h \
+    sys/un.h \
+    time.h \
+    util.h], [], [
+	COMPATINCLUDES="openbsd-compat/include"
+	header="$COMPATINCLUDES/$ac_header"
+	dir=`dirname "$header"`
+	mkdir -p "$dir"
+	case "$ac_header" in
+	poll.h) echo '#ifdef HAVE_SYS_POLL_H'
+	        echo '#include <sys/poll.h>'
+	        echo '#endif' ;;
+	*)      ;;
+	esac >"$header"
+])
+AC_SUBST([COMPATINCLUDES])
+
+AC_CHECK_DECLS([le32toh, le64toh, htole64], [], [], [
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
+#ifdef HAVE_ENDIAN_H
+# include <endian.h>
+#endif
 ])
 
 # On some platforms (eg SunOS4) sys/audit.h requires sys/[time|types|label.h]
@@ -619,6 +650,12 @@ SPP_MSG="no"
 # the --with-solaris-privs option and --with-sandbox=solaris).
 SOLARIS_PRIVS="no"
 
+# Default shared library extension
+SHLIBEXT=".so"
+
+# See OpenBSD section in $host case below.
+need_pledge_inet=""
+
 # Check for some target-specific stuff
 case "$host" in
 *-*-aix*)
@@ -630,6 +667,7 @@ case "$host" in
 	AC_MSG_CHECKING([if compiler allows macro redefinitions])
 	AC_COMPILE_IFELSE(
 	    [AC_LANG_PROGRAM([[
+#include <stdlib.h>
 #define testmacro foo
 #define testmacro bar]],
 	    [[ exit(0); ]])],
@@ -737,6 +775,7 @@ case "$host" in
 	# Cygwin defines optargs, optargs as declspec(dllimport) for historical
 	# reasons which cause compile warnings, so we disable those warnings.
 	OSSH_CHECK_CFLAG_COMPILE([-Wno-attributes])
+	SHLIBEXT=".dll"
 	;;
 *-*-dgux*)
 	AC_DEFINE([IP_TOS_IS_BROKEN], [1],
@@ -796,6 +835,7 @@ int main(void) { if (NSVersionOfRunTimeLibrary("System") >= (60 << 16))
 	# cf. Apple bug 3710161 (not public, but searchable)
 	AC_DEFINE([BROKEN_POLL], [1],
 	    [System poll(2) implementation is broken])
+	SHLIBEXT=".dylib"
 	;;
 *-*-dragonfly*)
 	SSHDLIBS="$SSHDLIBS"
@@ -915,6 +955,27 @@ int main(void) { if (NSVersionOfRunTimeLibrary("System") >= (60 << 16))
 	AC_DEFINE([_PATH_BTMP], ["/var/log/btmp"], [log for bad login attempts])
 	AC_DEFINE([USE_BTMP])
 	AC_DEFINE([LINUX_OOM_ADJUST], [1], [Adjust Linux out-of-memory killer])
+	AC_ARG_WITH([linux-memlock-onfault],
+		[  --with-linux-memlock-onfault Enables memory locking on Linux],
+		[
+			if test "x$withval" != "xno" ; then
+				AC_MSG_CHECKING([for MCL_ONFAULT])
+				AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+					[[ #include <sys/mman.h> ]],
+					[[ mlockall(MCL_FUTURE | MCL_ONFAULT); ]],
+				)],
+				[
+					AC_MSG_RESULT([supported])
+					AC_DEFINE([LINUX_MEMLOCK_ONFAULT], [1],
+					[Lock all memory to protect sshd against Linux kcompactd] )],
+				[
+					AC_MSG_RESULT([not supported])
+					AC_MSG_ERROR([MCL_ONFAULT is not available on your system])
+				])
+			fi
+		],
+	)
+
 	AC_DEFINE([SYSTEMD_NOTIFY], [1], [Have sshd notify systemd on start/reload])
 	inet6_default_4in6=yes
 	case `uname -r` in
@@ -1058,6 +1119,8 @@ mips-sony-bsd|mips-sony-newsos4)
 *-*-freebsd*)
 	AC_DEFINE([LOCKED_PASSWD_PREFIX], ["*LOCKED*"], [Account locked with pw(1)])
 	AC_DEFINE([SSH_TUN_FREEBSD], [1], [Open tunnel devices the FreeBSD way])
+	AC_DEFINE([SSH_TUN_COMPAT_AF], [1],
+	    [Use tunnel device compatibility to OpenBSD])
 	AC_CHECK_HEADER([net/if_tap.h], ,
 	    AC_DEFINE([SSH_TUN_NO_L2], [1], [No layer 2 tunnel support]))
 	AC_DEFINE([BROKEN_GLOB], [1], [FreeBSD glob does not do what we need])
@@ -1094,6 +1157,28 @@ mips-sony-bsd|mips-sony-newsos4)
 	AC_DEFINE([SYSLOG_R_SAFE_IN_SIGHAND], [1],
 	    [syslog_r function is safe to use in in a signal handler])
 	TEST_MALLOC_OPTIONS="SJRU"
+	AC_MSG_CHECKING([whether pledge(2) allows IP_TOS])
+	AC_RUN_IFELSE(
+	    [AC_LANG_PROGRAM([[
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <err.h>
+	    ]], [[
+int s, one = 1;
+if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+	err(1, "socket");
+if (pledge("stdio", NULL) == -1)
+	err(1, "pledge");
+if (setsockopt(s, IPPROTO_IP, IP_TOS, &one, sizeof(one)) == -1)
+	err(1, "setsockopt");
+	    ]])],
+	    [ AC_MSG_RESULT([yes]) ], [
+		AC_MSG_RESULT([no])
+		need_pledge_inet=1
+	    ],
+	    [ AC_MSG_WARN([cross compiling: cannot test]) ])
 	;;
 *-*-solaris*)
 	if test "x$withval" != "xno" ; then
@@ -1367,6 +1452,14 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[ #include <stdlib.h> ]], [[ exit(0); ]])],
 	[	AC_MSG_WARN([cross compiling: not checking compiler sanity]) ]
 )
 
+dnl Finish up special pledge(2) handling from above.
+if test -z "$need_pledge_inet" ; then
+	AC_DEFINE_UNQUOTED([PLEDGE_EXTRA_INET], [])
+else
+	AC_DEFINE_UNQUOTED([PLEDGE_EXTRA_INET], ["inet "],
+		[need inet in pledge for setsockopt IP_TOS])
+fi
+
 dnl Checks for header files.
 # Checks for libraries.
 AC_CHECK_FUNC([setsockopt], , [AC_CHECK_LIB([socket], [setsockopt])])
@@ -1414,6 +1507,11 @@ AC_CHECK_FUNC([getspnam], ,
 	[AC_CHECK_LIB([gen], [getspnam], [LIBS="$LIBS -lgen"])])
 AC_SEARCH_LIBS([basename], [gen], [AC_DEFINE([HAVE_BASENAME], [1],
 	[Define if you have the basename function.])])
+
+dnl sqrt() only used in unit tests.
+AC_CHECK_FUNC([sqrt], ,
+	[AC_CHECK_LIB([m], [sqrt], [TESTLIBS="$TESTLIBS -lm"])])
+AC_SUBST([TESTLIBS])
 
 dnl zlib defaults to enabled
 zlib=yes
@@ -1661,6 +1759,12 @@ AC_RUN_IFELSE(
 	]
 )
 
+AC_CHECK_MEMBERS([struct dirent.d_type], [], [], [[
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+]])
+
 AC_MSG_CHECKING([for /proc/pid/fd directory])
 if test -d "/proc/$$/fd" ; then
 	AC_DEFINE([HAVE_PROC_PID], [1], [Define if you have /proc/$pid/fd])
@@ -1771,6 +1875,48 @@ AC_ARG_WITH([libedit],
 		)
 	fi ]
 )
+
+# Check whether user wants wtmpdb support
+WTMPDB_MSG="no"
+AC_ARG_WITH([wtmpdb],
+	[  --with-wtmpdb[[=PATH]]   Enable wtmpdb support for sshd],
+	[ if test "x$withval" != "xno" ; then
+		if test "x$withval" = "xyes" ; then
+			if test "x$PKGCONFIG" != "xno"; then
+				AC_MSG_CHECKING([if $PKGCONFIG knows about wtmpdb])
+				if "$PKGCONFIG" libwtmpdb; then
+					AC_MSG_RESULT([yes])
+					use_pkgconfig_for_libwtmpdb=yes
+				else
+					AC_MSG_RESULT([no])
+				fi
+			fi
+		else
+			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+			if test -n "${rpath_opt}"; then
+				LDFLAGS="-L${withval}/lib ${rpath_opt}${withval}/lib ${LDFLAGS}"
+			else
+				LDFLAGS="-L${withval}/lib ${LDFLAGS}"
+			fi
+		fi
+		if test "x$use_pkgconfig_for_libwtmpdb" = "xyes"; then
+			LIBWTMPDB=`$PKGCONFIG --libs libwtmpdb`
+			CPPFLAGS="$CPPFLAGS `$PKGCONFIG --cflags libwtmpdb`"
+		else
+			LIBWTMPDB="-lwtmpdb"
+		fi
+		OTHERLIBS=`echo $LIBWTMPDB | sed 's/-lwtmpdb//'`
+		AC_CHECK_LIB([wtmpdb], [wtmpdb_login],
+			[ AC_DEFINE([USE_WTMPDB], [1], [Use libwtmpdb for sshd])
+			  WTMPDB_MSG="yes"
+			  AC_SUBST([LIBWTMPDB])
+			],
+			[ AC_MSG_ERROR([libwtmpdb not found]) ],
+			[ $OTHERLIBS ]
+		)
+	fi ]
+)
+
 
 AUDIT_MODULE=none
 AC_ARG_WITH([audit],
@@ -1923,6 +2069,7 @@ AC_CHECK_FUNCS([ \
 	fnmatch \
 	freeaddrinfo \
 	freezero \
+	fstatat \
 	fstatfs \
 	fstatvfs \
 	futimes \
@@ -1957,7 +2104,9 @@ AC_CHECK_FUNCS([ \
 	memmove \
 	memset_s \
 	mkdtemp \
+	mmap \
 	ngetaddrinfo \
+	nlist \
 	nsleep \
 	ogetaddrinfo \
 	openlog_r \
@@ -2018,6 +2167,7 @@ AC_CHECK_FUNCS([ \
 	timegm \
 	timingsafe_bcmp \
 	truncate \
+	unlinkat \
 	unsetenv \
 	updwtmpx \
 	utimensat \
@@ -2028,6 +2178,19 @@ AC_CHECK_FUNCS([ \
 	waitpid \
 	warn \
 ])
+
+AC_MSG_CHECKING([whether compiler supports __builtin_popcount])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+		#include <stdlib.h>
+	]],
+	[[ int x = 123, y;
+	   y = __builtin_popcount(123);
+	   exit(y == 6 ? 0 : -1); ]])],
+	[ AC_MSG_RESULT([yes]) ], [
+		AC_MSG_RESULT([no])
+		AC_DEFINE([MISSING_BUILTIN_POPCOUNT], [1], [Define if your compiler lacks __builtin_popcount])
+	]
+)
 
 AC_CHECK_DECLS([bzero, memmem])
 
@@ -2084,14 +2247,10 @@ AC_ARG_WITH([security-key-builtin],
 	[ enable_sk_internal=$withval ]
 )
 
-enable_dsa=
-AC_ARG_ENABLE([dsa-keys],
-	[  --enable-dsa-keys       enable DSA key support [no]],
-	[
-		if test "x$enableval" != "xno" ; then
-			enable_dsa=1
-		fi
-	]
+enable_sk_standalone=
+AC_ARG_WITH([security-key-standalone],
+	[  --with-security-key-standalone build standalone sk-libfido2 SecurityKeyProvider],
+	[ enable_sk_standalone=$withval ]
 )
 
 AC_SEARCH_LIBS([dlopen], [dl])
@@ -2189,6 +2348,11 @@ AC_CHECK_DECLS([MAXSYMLINKS], , , [
 AC_CHECK_DECLS([offsetof], , , [
 #include <stddef.h>
 	])
+
+AC_CHECK_DECLS([INFINITY], ,
+    AC_CHECK_DECLS(__builtin_inff),
+    [#include <math.h>]
+)
 
 # extra bits for select(2)
 AC_CHECK_DECLS([howmany, NFDBITS], [], [], [[
@@ -2400,6 +2564,9 @@ fi
 # This is only useful for when BROKEN_SNPRINTF
 AC_MSG_CHECKING([whether snprintf can declare const char *fmt])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#ifdef _FORTIFY_SOURCE
+#undef _FORTIFY_SOURCE
+#endif
 #include <stdio.h>
 int snprintf(char *a, size_t b, const char *c, ...) { return 0; }
 		]], [[
@@ -2890,8 +3057,8 @@ if test "x$openssl" = "xyes" ; then
 				*) ;;	# Assume all other versions are good.
 				esac
 				;;
-			30*)
-				# OpenSSL 3; we use the 1.1x API
+			30*|40*)
+				# OpenSSL 3 & 4; we use the 1.1x API
 				# https://openssl.org/policies/general/versioning-policy.html
 				CPPFLAGS="$CPPFLAGS -DOPENSSL_API_COMPAT=0x10100000L"
 				;;
@@ -2981,7 +3148,6 @@ if test "x$openssl" = "xyes" ; then
 	AC_CHECK_FUNCS([ \
 		BN_is_prime_ex \
 		DES_crypt \
-		DSA_generate_parameters_ex \
 		EVP_DigestSign \
 		EVP_DigestVerify \
 		EVP_DigestFinal_ex \
@@ -3005,6 +3171,10 @@ if test "x$openssl" = "xyes" ; then
 
 	# LibreSSL/OpenSSL API differences
 	AC_CHECK_FUNCS([ \
+		EC_POINT_get_affine_coordinates \
+		EC_POINT_get_affine_coordinates_GFp \
+		EC_POINT_set_affine_coordinates \
+		EC_POINT_set_affine_coordinates_GFp \
 		EVP_CIPHER_CTX_iv \
 		EVP_CIPHER_CTX_iv_noconst \
 		EVP_CIPHER_CTX_get_iv \
@@ -3202,34 +3372,17 @@ if test "x$openssl" = "xyes" ; then
 			AC_MSG_RESULT([no])
 		]
 	)
-
-	openssl_dsa=no
-	if test ! -z "$enable_dsa" ; then
-		AC_CHECK_DECLS([OPENSSL_NO_DSA], [], [
-			AC_CHECK_DECLS([OPENSSL_IS_BORINGSSL], [],
-			    [ openssl_dsa=yes ],
-			    [ #include <openssl/opensslconf.h> ]
-			)
-		    ],
-		    [ #include <openssl/opensslconf.h> ]
-		)
-		AC_MSG_CHECKING([whether to enable DSA key support])
-		if test "x$openssl_dsa" = "xno"; then
-			AC_MSG_ERROR([DSA requested but not supported by OpenSSL])
-		else
-			AC_MSG_RESULT([yes])
-			AC_DEFINE([WITH_DSA], [1],
-			   [DSA keys explicitly enabled])
-		fi
-	fi
 fi
 
 # PKCS11/U2F depend on OpenSSL and dlopen().
 enable_pkcs11=yes
 enable_sk=yes
-if test "x$openssl" != "xyes" ; then
-	enable_pkcs11="disabled; missing libcrypto"
-fi
+
+AC_CHECK_DECL([OPENSSL_IS_AWSLC],
+	[enable_pkcs11="disabled; PKCS#11 not supported with AWS-LC"],
+	[],
+	[#include <openssl/base.h>]
+)
 if test "x$ac_cv_func_dlopen" != "xyes" ; then
 	enable_pkcs11="disabled; missing dlopen(3)"
 	enable_sk="disabled; missing dlopen(3)"
@@ -3319,6 +3472,16 @@ if test "x$enable_sk" = "xyes" -a "x$enable_sk_internal" != "xno" ; then
 		])
 		LIBS="$saved_LIBS"
 	fi
+fi
+
+# Check for standalone SecurityKeyProvider
+AC_MSG_CHECKING([whether to build standalone sk-libfido2])
+if test "x$enable_sk_standalone" = "xyes" ; then
+	AC_MSG_RESULT([yes])
+	AC_SUBST([SK_STANDALONE], [sk-libfido2$SHLIBEXT])
+else
+	AC_MSG_RESULT([no])
+	AC_SUBST([SK_STANDALONE], [""])
 fi
 
 AC_CHECK_FUNCS([ \
@@ -3613,7 +3776,7 @@ AC_CHECK_TYPES([nfds_t], , , [
 # Decide which sandbox style to use
 sandbox_arg=""
 AC_ARG_WITH([sandbox],
-	[  --with-sandbox=style    Specify privilege separation sandbox (no, capsicum, darwin, rlimit, seccomp_filter, systrace, pledge)],
+	[  --with-sandbox=style    Specify privilege separation sandbox (no, capsicum, darwin, rlimit, seccomp_filter)],
 	[
 		if test "x$withval" = "xyes" ; then
 			sandbox_arg=""
@@ -3730,19 +3893,7 @@ if test "x$sandbox_arg" != "xno"; then
     )
 fi
 
-if test "x$sandbox_arg" = "xpledge" || \
-   ( test -z "$sandbox_arg" && test "x$ac_cv_func_pledge" = "xyes" ) ; then
-	test "x$ac_cv_func_pledge" != "xyes" && \
-		AC_MSG_ERROR([pledge sandbox requires pledge(2) support])
-	SANDBOX_STYLE="pledge"
-	AC_DEFINE([SANDBOX_PLEDGE], [1], [Sandbox using pledge(2)])
-elif test "x$sandbox_arg" = "xsystrace" || \
-   ( test -z "$sandbox_arg" && test "x$have_systr_policy_kill" = "x1" ) ; then
-	test "x$have_systr_policy_kill" != "x1" && \
-		AC_MSG_ERROR([systrace sandbox requires systrace headers and SYSTR_POLICY_KILL support])
-	SANDBOX_STYLE="systrace"
-	AC_DEFINE([SANDBOX_SYSTRACE], [1], [Sandbox using systrace(4)])
-elif test "x$sandbox_arg" = "xdarwin" || \
+if test "x$sandbox_arg" = "xdarwin" || \
      ( test -z "$sandbox_arg" && test "x$ac_cv_func_sandbox_init" = "xyes" && \
        test "x$ac_cv_header_sandbox_h" = "xyes") ; then
 	test "x$ac_cv_func_sandbox_init" != "xyes" -o \
@@ -4361,7 +4512,11 @@ int main(void)
 	long long num = 0x7fffffffffffffffll;
 #endif
 	strcpy(expected_out, "9223372036854775807");
+#if (SIZEOF_LONG_INT == 8)
+	snprintf(buf, mazsize, "%ld", num);
+#else
 	snprintf(buf, mazsize, "%lld", num);
+#endif
 	if(strcmp(buf, expected_out) != 0)
 		exit(1);
 	exit(0);
@@ -5657,8 +5812,8 @@ CFLAGS="${CFLAGS} ${CFLAGS_AFTER}"
 LDFLAGS="${LDFLAGS} ${LDFLAGS_AFTER}"
 
 # Make a copy of CFLAGS/LDFLAGS without PIE options.
-LDFLAGS_NOPIE=`echo "$LDFLAGS" | sed 's/ -pie//'`
-CFLAGS_NOPIE=`echo "$CFLAGS" | sed 's/ -fPIE//'`
+LDFLAGS_NOPIE=`echo "$LDFLAGS" | sed 's/^-pie //;s/ -pie//g'`
+CFLAGS_NOPIE=`echo "$CFLAGS" | sed 's/^-fPIE //;s/ -fPIE//g'`
 AC_SUBST([LDFLAGS_NOPIE])
 AC_SUBST([CFLAGS_NOPIE])
 
