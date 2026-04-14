@@ -1,3 +1,20 @@
+openssh (1:9.9p2-0deepin5) unstable; urgency=medium
+
+  * Apply patches from upstream:
+    - d/p/0033-upstream-Fix-logic-error-in-DisableForwarding-option.patch
+      Fixes: CVE-2025-32728
+    - d/p/0034-upstream-Make-a-copy-of-the-user-when-handling-ssh-l.patch
+      Fixes a UAF by xstrdup(optarg)
+    - d/p/0035-upstream-Improve-rules-for-expansion-of-username.patch
+      Fixes: CVE-2025-61984
+    - d/p/0036-upstream-don-t-allow-0-characters-in-url-encoded-str.patch
+      d/p/0037-Add-more-username-validity-checks.patch
+      Fixes: CVE-2025-61985
+    - d/p/gssapi.patch
+      Fixes: CVE-2026-3497
+
+ -- Tianyu Chen <sweetyfish@deepin.org>  Tue, 14 Apr 2026 11:20:19 +0800
+
 openssh (1:9.9p2-0deepin4) unstable; urgency=medium
 
   * fix: filter Uos or uos for lsb_release -is.
