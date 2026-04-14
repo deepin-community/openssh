@@ -32,3 +32,8 @@ deepin-extra-version.patch
 deepin-ssh-connect-idle-timeout.patch
 deepin-ssh-keygen-privatekey-file-perm.patch
 add-sm-support.patch
+0033-upstream-Fix-logic-error-in-DisableForwarding-option.patch
+0034-upstream-Make-a-copy-of-the-user-when-handling-ssh-l.patch
+0035-upstream-Improve-rules-for-expansion-of-username.patch
+0036-upstream-don-t-allow-0-characters-in-url-encoded-str.patch
+0037-Add-more-username-validity-checks.patch

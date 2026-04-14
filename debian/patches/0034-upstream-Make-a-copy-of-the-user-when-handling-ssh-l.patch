@@ -1,0 +1,25 @@
+From: "dtucker@openbsd.org" <dtucker@openbsd.org>
+Date: Sun, 2 Mar 2025 07:02:49 +0000
+Subject: upstream: Make a copy of the user when handling ssh -l, so that
+
+later during User token expansion we don't end up freeing a member of argv.
+Spotted by anton@'s regress tests.
+
+OpenBSD-Commit-ID: 2f671a4f5726b66d123b88b1fdd1a90581339955
+---
+ ssh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ssh.c b/ssh.c
+index 925d5c0..fe4f7c4 100644
+--- a/ssh.c
++++ b/ssh.c
+@@ -1019,7 +1019,7 @@ main(int ac, char **av)
+ 			break;
+ 		case 'l':
+ 			if (options.user == NULL)
+-				options.user = optarg;
++				options.user = xstrdup(optarg);
+ 			break;
+ 
+ 		case 'L':
