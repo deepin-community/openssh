@@ -1,3 +1,14 @@
+openssh (1:10.3p1-1deepin1) unstable; urgency=medium
+
+  * New upstream release 10.3p1  Security fixes:   * CVE-2026-35414: Fix
+    authorized_keys principals option handling   * CVE-2026-35388: Fix
+    missing connection multiplexing confirmation   * CVE-2026-35387: Fix
+    incomplete application of ECDSA algorithms   * CVE-2026-35386: Fix
+    shell metacharacters validation in usernames   * CVE-2026-35385: Fix
+    scp setuid/setgid bits handling
+
+ -- deepin-ci-robot <packages@deepin.org>  Wed, 15 Apr 2026 15:58:48 +0800
+
 openssh (1:9.9p2-0deepin4) unstable; urgency=medium
 
   * fix: filter Uos or uos for lsb_release -is.
