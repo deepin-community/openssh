@@ -1,0 +1,32 @@
+From: Lu Peilong <lupeilong@uniontech.com>
+Subject: [PATCH] Fix duplicate PAM Text Info message on SSH login
+
+Bug: 333423
+
+Root cause:
+In privilege separation mode, the monitor process sends loginmsg
+(PAM_TEXT_INFO) to the child process twice:
+
+1. mm_answer_pam_account() sends loginmsg via MONITOR_ANS_PAM_ACCOUNT
+   (used as SSH2_MSG_USERAUTH_BANNER during auth phase)
+2. mm_answer_pty() sends loginmsg again during session setup
+   (displayed via PTY by display_loginmsg() in session.c)
+
+After mm_answer_pam_account() sends the loginmsg, it does not reset
+the buffer, so the PTY setup sends the same content again, resulting
+in duplicate "验证成功" messages on the client.
+
+Fix:
+Add sshbuf_reset(loginmsg) after mm_request_send() in
+mm_answer_pam_account() so the message is only sent once.
+
+--- a/monitor.c
++++ b/monitor.c
+@@ -1085,6 +1085,7 @@ mm_answer_pam_account(struct ssh *ssh, int sock, struct sshbuf *m)
+ 		fatal("%s: buffer error: %s", __func__, ssh_err(r));
+
+ 	mm_request_send(sock, MONITOR_ANS_PAM_ACCOUNT, m);
++	sshbuf_reset(loginmsg);
+
+ 	return (ret);
+ }

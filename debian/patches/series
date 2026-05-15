@@ -37,3 +37,4 @@ add-sm-support.patch
 0035-upstream-Improve-rules-for-expansion-of-username.patch
 0036-upstream-don-t-allow-0-characters-in-url-encoded-str.patch
 0037-Add-more-username-validity-checks.patch
+uniontech-fix-duplicate-loginmsg.patch

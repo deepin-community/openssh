@@ -1,3 +1,9 @@
+openssh (1:9.9p2-0deepin6) unstable; urgency=medium
+
+  * fix duplicate output.
+
+ -- xinpeng.wang <wangxinpeng@uniontech.com>  Fri, 15 May 2026 16:27:44 +0800
+
 openssh (1:9.9p2-0deepin5) unstable; urgency=medium
 
   * Apply patches from upstream:
