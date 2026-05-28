@@ -1,3 +1,10 @@
+openssh (1:9.9p2-0deepin8) unstable; urgency=medium
+
+  * CVE-2026-35386: upstream: move username validity check for usernames
+    specified
+
+ -- 胡登 <ut000081@golf66work>  Thu, 28 May 2026 10:21:06 +0800
+
 openssh (1:9.9p2-0deepin7) unstable; urgency=medium
 
   * Apply patch from upstream:

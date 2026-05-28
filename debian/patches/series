@@ -39,3 +39,4 @@ add-sm-support.patch
 0037-Add-more-username-validity-checks.patch
 uniontech-fix-duplicate-loginmsg.patch
 0038-upstream-Clear-setuid-setgid-bits-when-downloading-.patch
+CVE-2026-35386.patch
