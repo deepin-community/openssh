@@ -1,3 +1,14 @@
+openssh (1:10.0p1-7+deb13u4deepin1) unstable; urgency=medium
+
+  * Fix duplicate PAM Text Info login message
+  * Force SSH_EXTRAVERSION to Deepin
+  * fix: ssh.service is disabled by default
+  * feat: add sm support
+  * feat: add sw64 support
+  * Fix ssh-keygen privatekey file permission (0400)
+
+ -- lichenggang <lichenggang@uniontech.com>  Tue, 16 Jun 2026 14:21:39 +0800
+
 openssh (1:10.0p1-7+deb13u4) trixie; urgency=medium
 
   * Don't reuse c->isatty for signalling that the remote channel has a tty

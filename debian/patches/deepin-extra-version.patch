@@ -1,0 +1,13 @@
+Index: openssh/version.h
+===================================================================
+--- openssh.orig/version.h
++++ openssh/version.h
+@@ -5,7 +5,7 @@
+ #define SSH_PORTABLE	"p2"
+ #define SSH_RELEASE_MINIMUM	SSH_VERSION SSH_PORTABLE
+ #ifdef SSH_EXTRAVERSION
+-#define SSH_RELEASE	SSH_RELEASE_MINIMUM " " SSH_EXTRAVERSION
++#define SSH_RELEASE	SSH_RELEASE_MINIMUM " " "Deepin"
+ #else
+ #define SSH_RELEASE	SSH_RELEASE_MINIMUM
+ #endif

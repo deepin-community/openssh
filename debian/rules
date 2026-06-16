@@ -32,6 +32,10 @@ else
   RUN_TESTS :=
 endif
 
+ifeq ($(DEB_BUILD_ARCH), sw64)
+  CFLAGS += -fwrapv -fno-strict-overflow
+endif
+
 # Change the version string to reflect distribution
 SSH_EXTRAVERSION := $(DEB_VENDOR)-$(shell echo '$(DEB_VERSION)' | sed -e 's/.*-//; s/+salsaci+.*/+salsaci/')
 
@@ -207,7 +211,11 @@ execute_after_dh_installinit:
 	dh_installsysusers
 
 override_dh_installsystemd:
+ifeq ($(shell lsb_release  -i -s),uos)
+	dh_installsystemd -popenssh-server --no-enable ssh.service
+else
 	dh_installsystemd -popenssh-server ssh.service
+endif
 	dh_installsystemd -popenssh-server --no-enable ssh.socket
 	dh_installsystemd -popenssh-server --no-start rescue-ssh.target
 	dh_installsystemd -popenssh-server sshd-keygen.service

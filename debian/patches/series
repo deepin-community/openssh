@@ -41,3 +41,8 @@ ipqos-deprecate-tos-keywords.patch
 ipqos-set-at-runtime.patch
 ipqos-set-extended-type.patch
 avoid-channel-isatty-overloading.patch
+deepin-ssh-connect-idle-timeout.patch
+deepin-extra-version.patch
+deepin-ssh-keygen-privatekey-file-perm.patch
+add-sm-support.patch
+uniontech-fix-duplicate-loginmsg.patch
