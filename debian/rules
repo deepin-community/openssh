@@ -211,7 +211,7 @@ execute_after_dh_installinit:
 	dh_installsysusers
 
 override_dh_installsystemd:
-ifeq ($(shell lsb_release  -i -s),uos)
+ifeq ($(shell lsb_release -i -s | tr A-Z a-z),uos)
 	dh_installsystemd -popenssh-server --no-enable ssh.service
 else
 	dh_installsystemd -popenssh-server ssh.service
