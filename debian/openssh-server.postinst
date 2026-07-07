@@ -9,18 +9,24 @@ action="$1"
 umask 022
 
 
+# The path to /usr/sbin/sshd is intentionally *not* prefixed by $DPKG_ROOT
+# because when dpkg is called with --force-script-chrootless then this is in
+# situations where we cannot execute binaries of the system which dpkg is
+# told to install packages in and thus it cannot do a chroot() call. Instead,
+# we use tools installed outside of the chroot and tell those tools to
+# operate on the chroot at the location given by $DPKG_ROOT.
 get_config_option() {
 	option="$1"
 	sshd_path=/usr/sbin/sshd
 
-	[ -f /etc/ssh/sshd_config ] || return
+	[ -f "$DPKG_ROOT/etc/ssh/sshd_config" ] || return
 
 	# begin-remove-after: released:forky
 	if [ -e /usr/sbin/sshd.session-split ]; then
 		sshd_path=/usr/sbin/sshd.session-split
 	fi
 	# end-remove-after
-	"$sshd_path" -G | sed -n "s/^$option //Ip"
+	"$sshd_path" -f "$DPKG_ROOT/etc/ssh/sshd_config" -G | sed -n "s/^$option //Ip"
 }
 
 
@@ -33,14 +39,14 @@ create_key() {
 	shift
 
 	if echo "$hostkeys" | grep -x "$file" >/dev/null && \
-	   [ ! -f "$file" ] ; then
+	   [ ! -f "$DPKG_ROOT$file" ] ; then
 		printf %s "$msg"
-		ssh-keygen -q -f "$file" -N '' "$@"
+		ssh-keygen -q -f "$DPKG_ROOT$file" -N '' "$@"
 		echo
 		if command -v restorecon >/dev/null 2>&1; then
-			restorecon "$file" "$file.pub"
+			restorecon "$DPKG_ROOT$file" "$DPKG_ROOT$file.pub"
 		fi
-		ssh-keygen -l -f "$file.pub"
+		ssh-keygen -l -f "$DPKG_ROOT$file.pub"
 	fi
 }
 
@@ -78,7 +84,7 @@ create_sshdconfig() {
 
 	trap cleanup EXIT
 	new_config="$(mktemp)"
-	cp -aZ /usr/share/openssh/sshd_config "$new_config"
+	cp -aZ "$DPKG_ROOT/usr/share/openssh/sshd_config" "$new_config"
 	if [ "$permit_root_login" != true ]; then
 		sed -i 's/^#*PermitRootLogin .*/PermitRootLogin yes/' \
 			"$new_config"
@@ -87,9 +93,9 @@ create_sshdconfig() {
 		sed -i 's/^#PasswordAuthentication .*/PasswordAuthentication no/' \
 			"$new_config"
 	fi
-	mkdir -pZ /etc/ssh
+	mkdir -pZ "$DPKG_ROOT/etc/ssh"
 	ucf --three-way --debconf-ok \
-		--sum-file /usr/share/openssh/sshd_config.md5sum \
+		--sum-file "$DPKG_ROOT/usr/share/openssh/sshd_config.md5sum" \
 		"$new_config" /etc/ssh/sshd_config
 	ucfr openssh-server /etc/ssh/sshd_config
 }
@@ -97,26 +103,8 @@ create_sshdconfig() {
 if [ "$action" = configure ]; then
 	create_sshdconfig
 	create_keys
-	if dpkg --compare-versions "$2" lt-nl 1:7.9p1-5 && \
-	   [ -f /etc/ssh/moduli.dpkg-bak ]; then
-	    # Handle /etc/ssh/moduli being moved from openssh-client to
-	    # openssh-server.  If there were no user modifications, then we
-	    # don't need to do anything special here; but if there were,
-	    # then the dpkg-maintscript-helper calls from openssh-client's
-	    # maintainer scripts will have saved the old file as .dpkg-bak,
-	    # which we now move back into place.
-	    mv /etc/ssh/moduli.dpkg-bak /etc/ssh/moduli
-	fi
-	if dpkg --compare-versions "$2" lt-nl 1:9.1p1-1~ && \
-	   deb-systemd-helper --quiet was-enabled ssh.socket && \
-	   [ -d /run/systemd/system ]
-	then
-		# migrate to systemd socket activation.
-		systemctl unmask ssh.service
-		systemctl disable ssh.service
-	fi
 	# begin-remove-after: released:forky
-	if [ -e /usr/sbin/sshd.session-split ]; then
+	if [ -e "$DPKG_ROOT/usr/sbin/sshd.session-split" ]; then
 		# We're ready to restart the listener process so that it
 		# executes sshd-session rather than sshd for new
 		# connections, so we can remove this diversion now.  This
@@ -129,7 +117,7 @@ if [ "$action" = configure ]; then
 		echo "Finishing upgrade from pre-9.8 monolithic sshd ..."
 		dpkg-divert --package openssh-client --remove --no-rename \
 			--divert /usr/sbin/sshd.session-split /usr/sbin/sshd
-		mv -f /usr/sbin/sshd.session-split /usr/sbin/sshd
+		mv -f "$DPKG_ROOT/usr/sbin/sshd.session-split" "$DPKG_ROOT/usr/sbin/sshd"
 	fi
 	# end-remove-after
 fi

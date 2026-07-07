@@ -1,3 +1,146 @@
+openssh (1:10.4p1-1) unstable; urgency=medium
+
+  OpenSSH 10.4p1 includes a number of changes that may affect existing
+  configurations:
+
+  * sshd(8): configuration dump mode ("sshd -G") now writes directives in
+    mixed case (e.g. "PubkeyAuthentication") whereas previously it emitted
+    only lower-case names.
+
+  * sshd(8): on Linux systems with the seccomp sandbox enabled, failures to
+    enable SECCOMP or NO_NEW_PRIVS are now fatal. Previously sshd(8) would
+    log the error but continue operation, to support systems that lacked
+    these features. Now systems that lack these should instead disable the
+    sandbox at configure time.
+
+  * ssh(1), sshd(8): make the transport protocol stricter by disconnecting
+    if the peer sends non-KEX messages during a post-authentication key
+    re-exchange. Previously a malicious peer could continue sending non-key
+    exchange messages without penalty. These would be buffered, causing
+    memory to be wasted up until the connection terminated or the
+    server/client hit a memory limit. Implementations that do not restrict
+    messages sent during key exchange as per RFC4253 section 7.1 may be
+    disconnected.
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 06 Jul 2026 19:11:28 +0100
+
+openssh (1:10.3p1-1) unstable; urgency=medium
+
+  OpenSSH 10.3p1 includes a number of changes that may affect existing
+  configurations:
+
+  * ssh(1), sshd(8): remove bug compatibility for implementations that don't
+    support rekeying. If such an implementation tries to interoperate with
+    OpenSSH, it will now eventually fail when the transport needs rekeying.
+
+  * sshd(8): prior to this release, a certificate that had an empty
+    principals section would be treated as matching any principal (i.e. as a
+    wildcard) when used via authorized_keys principals="" option. This was
+    intentional, but created a surprising and potentially risky situation if
+    a CA accidentally issued a certificate with an empty principals section:
+    instead of being useless as one might expect, it could be used to
+    authenticate as any user who trusted the CA via authorized_keys. [Note
+    that this condition did not apply to CAs trusted via the sshd_config(5)
+    TrustedUserCAKeys option.]
+
+    This release treats an empty principals section as never matching any
+    principal, and also fixes interpretation of wildcard characters in
+    certificate principals. Now they are consistently implemented for host
+    certificates and not supported for user certificates.
+
+  * ssh(1): the -J and equivalent -oProxyJump="..." options now validate
+    user and host names for ProxyJump/-J options passed via the command-line
+    (no such validation is performed for this option in configuration
+    files). This prevents shell injection in situations where these were
+    directly exposed to adversarial input, which would have been a terrible
+    idea to begin with.
+
+ -- Colin Watson <cjwatson@debian.org>  Sun, 12 Apr 2026 12:49:45 +0100
+
+openssh (1:10.1p1-1) unstable; urgency=medium
+
+  OpenSSH 10.1p1 includes a number of changes that may affect existing
+  configurations:
+
+   * ssh(1): add a warning when the connection negotiates a non-post quantum
+     key agreement algorithm.
+
+     This warning has been added due to the risk of "store now, decrypt
+     later" attacks. More details at https://openssh.com/pq.html
+
+     This warning may be controlled via a new WarnWeakCrypto ssh_config
+     option, defaulting to on. This option is likely to control additional
+     weak crypto warnings in the future.
+
+   * ssh(1), sshd(8): major changes to handling of DSCP marking/IPQoS
+
+     In both client and server the default DSCP (a.k.a IPQoS) values were
+     revised and the way these values are used during runtime has changed.
+
+     Interactive traffic is now assigned to the EF (Expedited Forwarding)
+     class by default. This provides more appropriate packet prioritisation
+     information for the intermediate network, such as wireless media (cf.
+     RFC 8325). Non-interactive traffic will now use the operating system
+     default DSCP marking. Both the interactive and non-interactive DSCP
+     values may be overridden via the IPQoS keyword, described in
+     ssh_config(5) and sshd_config(5).
+
+     The appropriate DSCP marking is now automatically selected and updated
+     as needed over the course of a connection's lifetime. ssh(1) and
+     sshd(8) will switch between the interactive and non-interactive IPQoS
+     values depending on the type of SSH channels open at the time. For
+     example, if an sftp session is using the connection alongside a shell
+     session, then the non- interactive value will be used for the duration
+     of the sftp. A connection which contains only interactive sessions is
+     marked EF.
+
+   * ssh(1), sshd(8): deprecate support for IPv4 type-of-service (ToS)
+     keywords in the IPQoS configuration directive.
+
+     Type of Service (ToS) was deprecated in the late nineties and replaced
+     with the Differentiated Services architecture, which has significant
+     advantages for operators because it offers more granularity.
+
+     OpenSSH switched its default IPQoS from ToS to DSCP values in 2018
+     (openssh-7.7).
+
+     IPQoS configurations with 'lowdelay', 'reliability', or 'throughput'
+     will be ignored and will instead use the system default QoS settings.
+     Additionally, a debug message will be logged about the deprecation with
+     a suggestion to use DSCP QoS instead.
+
+   * ssh-add(1): when adding certificates to an agent, set the expiry to the
+     certificate expiry time plus a short (5 min) grace period.
+
+     This will cause the agent to automatically remove certificates shortly
+     after they expire. A new ssh-add -N option disables this behaviour.
+
+   * All: remove experimental support for XMSS keys. This was never enabled
+     by default. We expect to implement a new post-quantum signature scheme
+     in the near future.
+
+   * ssh-agent(1), sshd(8): move agent listener sockets from /tmp to under
+     ~/.ssh/agent for both ssh-agent(1) and forwarded sockets in sshd(8).
+
+     This ensures processes that have restricted filesystem access that
+     includes /tmp do not ambiently have the ability to use keys in an
+     agent.
+
+     Moving the default directory has the consequence that the OS will no
+     longer clean up stale agent sockets, so ssh-agent now gains this
+     ability.
+
+     To support $HOME on NFS, the socket path includes a truncated hash of
+     the hostname. ssh-agent will, by default, only clean up sockets from
+     the same hostname.
+
+     ssh-agent(1) gains some new flags: -U suppresses the automatic cleanup
+     of stale sockets when it starts. -u forces a cleanup without keeping a
+     running agent, -uu forces a cleanup that ignores the hostname. -T makes
+     ssh-agent put the socket back in /tmp.
+
+ -- Colin Watson <cjwatson@debian.org>  Tue, 07 Oct 2025 22:07:19 +0100
+
 openssh (1:10.0p1-1) unstable; urgency=medium
 
   OpenSSH 10.0p1 includes a number of changes that may affect existing

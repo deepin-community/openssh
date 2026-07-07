@@ -32,10 +32,6 @@ else
   RUN_TESTS :=
 endif
 
-ifeq ($(DEB_BUILD_ARCH), sw64)
-  CFLAGS += -fwrapv -fno-strict-overflow
-endif
-
 # Change the version string to reflect distribution
 SSH_EXTRAVERSION := $(DEB_VENDOR)-$(shell echo '$(DEB_VERSION)' | sed -e 's/.*-//; s/+salsaci+.*/+salsaci/')
 
@@ -64,11 +60,6 @@ confflags += --with-4in6
 confflags += --with-privsep-path=/run/sshd
 confflags += --with-pid-dir=/run
 
-# The Hurd needs libcrypt for res_query et al.
-ifeq ($(DEB_HOST_ARCH_OS),hurd)
-confflags += --with-libs=-lcrypt
-endif
-
 # Always use the internal mkdtemp; see https://bugs.debian.org/1001186.
 confflags += ac_cv_func_mkdtemp=no
 
@@ -90,7 +81,9 @@ confflags += --with-tcp-wrappers
 confflags += --with-pam
 confflags += --with-libedit
 confflags += --with-kerberos5=/usr
+ifeq ($(shell dpkg --compare-versions "$$(dpkg-query -Wf '$${Version}' libssl-dev)" lt 4.0.0 && echo 1),1)
 confflags += --with-ssl-engine
+endif
 confflags += --with-wtmpdb
 ifeq ($(DEB_HOST_ARCH_OS),linux)
 confflags += --with-selinux
@@ -197,25 +190,18 @@ endif
 	rm -f debian/openssh-tests/usr/lib/openssh/regress/misc/sk-dummy/*.lo
 
 override_dh_installdocs:
-	dh_installdocs -Nopenssh-server -Nopenssh-sftp-server
-	dh_installdocs -popenssh-server -popenssh-sftp-server \
-		--link-doc=openssh-client
+	dh_installdocs --link-doc=openssh-common
 	# Avoid breaking dh_installexamples later.
-	mkdir -p debian/openssh-server/usr/share/doc/openssh-client
+	mkdir -p debian/openssh-server/usr/share/doc/openssh-common
+ifeq ($(filter pkg.openssh.nognome,$(DEB_BUILD_PROFILES)),)
+	mkdir -p debian/ssh-askpass-gnome/usr/share/doc/openssh-common
+endif
 
 override_dh_installinit:
 	dh_installinit -R --name ssh
 
-# Can be dropped in compat level 14
-execute_after_dh_installinit:
-	dh_installsysusers
-
 override_dh_installsystemd:
-ifeq ($(shell lsb_release -i -s | tr A-Z a-z),uos)
-	dh_installsystemd -popenssh-server --no-enable ssh.service
-else
 	dh_installsystemd -popenssh-server ssh.service
-endif
 	dh_installsystemd -popenssh-server --no-enable ssh.socket
 	dh_installsystemd -popenssh-server --no-start rescue-ssh.target
 	dh_installsystemd -popenssh-server sshd-keygen.service
@@ -235,8 +221,10 @@ override_dh_runit:
 
 execute_after_dh_fixperms-arch:
 	chmod u+s debian/openssh-client/usr/lib/openssh/ssh-keysign
+	chmod +x debian/openssh-tests/usr/lib/openssh/regress/scp-ssh-wrapper.sh
+	chmod +x debian/openssh-tests/usr/lib/openssh/regress/unittests/hostkeys/mktestdata.sh
 
-# Work around debhelper/dh-exec bug #1017023.
+# Work around dh-exec https://bugs.debian.org/1121699.
 override_dh_missing:
 	dh_missing --list-missing
 

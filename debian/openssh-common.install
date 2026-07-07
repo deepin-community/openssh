@@ -1,0 +1,6 @@
+usr/bin/ssh-keygen
+usr/lib/openssh/ssh-pkcs11-helper
+usr/lib/openssh/ssh-sk-helper
+usr/share/man/man1/ssh-keygen.1
+usr/share/man/man8/ssh-pkcs11-helper.8
+usr/share/man/man8/ssh-sk-helper.8

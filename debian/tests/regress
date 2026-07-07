@@ -9,6 +9,9 @@ STARTED_HAVEGED=false
 ADDED_HOST=false
 
 cleanup () {
+	sudo rm -f /usr/lib/openssh/regress/kbdintpw \
+	           /usr/lib/openssh/regress/password
+
 	if $ADDED_HOST; then
 		sudo sed -i '/[[:space:]]UNKNOWN$/d' /etc/hosts
 	fi
@@ -65,6 +68,14 @@ if ! grep -q '[[:space:]]UNKNOWN$' /etc/hosts; then
 	echo '127.0.0.2 UNKNOWN' | sudo tee -a /etc/hosts >/dev/null
 	ADDED_HOST=:
 fi
+
+# This test runs in an isolated container, so we can safely set things up
+# for keyboard-interactive and password authentication tests to run.  We
+# could hardcode a password, but let's generate a random one anyway.
+PASSWORD="$(pwgen -y 16 1)"
+echo "$PASSWORD" | sudo passwd -s "$(id -un)"
+echo "$PASSWORD" | sudo tee /usr/lib/openssh/regress/kbdintpw >/dev/null
+echo "$PASSWORD" | sudo tee /usr/lib/openssh/regress/password >/dev/null
 
 annotate-output +%H:%M:%S.%N \
 	/usr/lib/openssh/regress/run-tests "$AUTOPKGTEST_TMP" "$@"

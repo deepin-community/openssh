@@ -1,8 +1,3 @@
-# Ignoring until after the release of bookworm to avoid problems with
-# partial upgrades on non-default init systems.  See
-# https://lists.debian.org/debian-devel/2023/01/msg00158.html and thread.
-openssh-server: depends-on-obsolete-package Depends: lsb-base
-
 # Deliberate special cases for a helper service.
 openssh-server: systemd-service-file-refers-to-unusual-wantedby-target ssh.service [usr/lib/systemd/system/sshd-keygen.service]
 openssh-server: systemd-service-file-refers-to-unusual-wantedby-target ssh.socket [usr/lib/systemd/system/sshd-keygen.service]

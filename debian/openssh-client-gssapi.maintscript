@@ -1,0 +1,1 @@
+dir_to_symlink /usr/share/doc/openssh-client-gssapi openssh-common 1:10.3p1-6~ openssh-client-gssapi

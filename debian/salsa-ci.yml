@@ -3,6 +3,7 @@ include:
   - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/recipes/debian.yml
 
 variables:
+  SALSA_CI_DISABLE_LICENSERECON: 0
   SALSA_CI_ENABLE_BUILD_PACKAGE_PROFILES: 1
 
 test-build-profiles:

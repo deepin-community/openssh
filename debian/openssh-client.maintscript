@@ -1,1 +1,1 @@
-rm_conffile /etc/ssh/moduli 1:7.9p1-8~
+dir_to_symlink /usr/share/doc/openssh-client openssh-common 1:10.3p1-6~
