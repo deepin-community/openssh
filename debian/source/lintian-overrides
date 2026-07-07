@@ -1,2 +1,8 @@
 # openssh-server/password-authentication is preseeding-only, at least for now.
 openssh source: untranslatable-debconf-templates [debian/openssh-server.templates:20]
+
+# These entries in debian/copyright are helpful when running lrc in a git
+# checkout or an unpacked source package, but lintian doesn't apply patches
+# so it thinks they're superfluous.
+openssh source: superfluous-file-pattern kexgss*.c [debian/copyright:*]
+openssh source: superfluous-file-pattern ssh-null.c [debian/copyright:*]

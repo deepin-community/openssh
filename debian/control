@@ -7,42 +7,51 @@ Build-Depends:
  debhelper-compat (= 13),
  dh-exec,
  dh-runit (>= 2.8.8),
- dh-sequence-movetousr,
+ dh-sequence-installsysusers,
  libaudit-dev [linux-any],
  libedit-dev,
  libfido2-dev (>= 1.5.0) [linux-any],
  libgtk-3-dev <!pkg.openssh.nognome>,
  libkrb5-dev | heimdal-dev,
  libpam0g-dev | libpam-dev,
- libselinux1-dev [linux-any],
+ libselinux-dev [linux-any],
  libssl-dev (>= 1.1.1),
  libwrap0-dev | libwrap-dev,
  libwtmpdb-dev,
  pkgconf,
  zlib1g-dev,
- lsb-release,
-Standards-Version: 4.6.2
+Standards-Version: 4.7.4
 Uploaders:
  Colin Watson <cjwatson@debian.org>,
  Matthew Vernon <matthew@debian.org>,
 Homepage: https://www.openssh.com/
 Vcs-Git: https://salsa.debian.org/ssh-team/openssh.git
 Vcs-Browser: https://salsa.debian.org/ssh-team/openssh
-Rules-Requires-Root: no
 X-Style: black
+
+Package: openssh-common
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Breaks:
+ openssh-client (<< 1:10.3p1-6~),
+Replaces:
+ openssh-client (<< 1:10.3p1-6~),
+Multi-Arch: foreign
+Description: common files for OpenSSH
+ This package provides common files shared among all OpenSSH packages,
+ including documentation and the ssh-keygen utility.
 
 Package: openssh-client
 Architecture: any
 Depends:
- adduser,
- init-system-helpers (>= 1.66~),
- passwd,
  ${misc:Depends},
  ${shlibs:Depends},
 Recommends:
  xauth,
 Conflicts:
- sftp,
+ openssh-server (<< 1:10.3p1-6~),
 Breaks:
  openssh-sk-helper,
 Replaces:
@@ -72,7 +81,7 @@ Description: secure shell (SSH) client, for secure access to remote machines
  .
  This package provides the ssh, scp and sftp clients, the ssh-agent
  and ssh-add programs to make public key authentication more convenient,
- and the ssh-keygen, ssh-keyscan, ssh-copy-id and ssh-argv0 utilities.
+ and the ssh-keyscan, ssh-copy-id and ssh-argv0 utilities.
  .
  In some countries it may be illegal to use any encryption at all
  without a special permit.
@@ -82,7 +91,7 @@ Description: secure shell (SSH) client, for secure access to remote machines
 
 Package: openssh-client-gssapi
 Priority: optional
-Architecture: all
+Architecture: any
 Depends:
  openssh-client (>= ${binary:Version}),
  ${misc:Depends},
@@ -115,8 +124,7 @@ Pre-Depends:
 Depends:
  libpam-modules,
  libpam-runtime,
- lsb-base,
- openssh-client (= ${binary:Version}),
+ openssh-common (= ${binary:Version}),
  openssh-sftp-server,
  procps,
  ucf,
@@ -125,14 +133,10 @@ Depends:
 Recommends:
  default-logind | logind | libpam-systemd,
  ncurses-term,
+ passwd,
  xauth,
  ${openssh-server:Recommends},
-Conflicts:
- sftp,
- ssh-socks,
- ssh2,
 Replaces:
- openssh-client (<< 1:7.9p1-8),
  ssh,
  ssh-krb5,
 Breaks:
@@ -168,9 +172,8 @@ Description: secure shell (SSH) server, for secure access from remote machines
 
 Package: openssh-server-gssapi
 Priority: optional
-Architecture: all
+Architecture: any
 Depends:
- openssh-client-gssapi (>= ${binary:Version}),
  openssh-server (>= ${binary:Version}),
  ${misc:Depends},
 Multi-Arch: foreign
@@ -255,7 +258,7 @@ Description: OpenSSH regression tests
 
 Package: ssh
 Priority: optional
-Architecture: all
+Architecture: any
 Depends:
  openssh-client (>= ${binary:Version}),
  openssh-server (>= ${binary:Version}),

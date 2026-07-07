@@ -1,0 +1,1 @@
+dir_to_symlink /usr/share/doc/ssh-askpass-gnome openssh-common 1:10.3p1-6~

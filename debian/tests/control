@@ -10,7 +10,10 @@ Depends:
  haveged,
  openssh-tests,
  openssl,
+ passwd,
+ procps,
  putty-tools,
+ pwgen,
  python3-twisted,
  sudo,
  sysvinit-utils,
@@ -35,6 +38,7 @@ Restrictions:
  needs-sudo,
 Depends:
  openssh-server,
+ passwd,
 
 Tests:
  xinetd,
@@ -44,4 +48,5 @@ Restrictions:
  needs-sudo,
 Depends:
  openssh-server,
+ passwd,
  xinetd,

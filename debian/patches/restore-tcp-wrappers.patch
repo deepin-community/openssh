@@ -1,4 +1,4 @@
-From 840b02b43ecdeb1a062c487798a26c4b1ca41ac6 Mon Sep 17 00:00:00 2001
+From 5a127a97cd027f124bd037c9e1bec7a00a43051b Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@debian.org>
 Date: Tue, 7 Oct 2014 13:22:41 +0100
 Subject: Restore TCP wrappers support
@@ -28,10 +28,10 @@ Patch-Name: restore-tcp-wrappers.patch
  3 files changed, 89 insertions(+)
 
 diff --git a/configure.ac b/configure.ac
-index e334ad2ec..06ad5c78a 100644
+index 40ccb3a78..444267f37 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -1727,6 +1727,62 @@ else
+@@ -1857,6 +1857,62 @@ else
  	AC_MSG_RESULT([no])
  fi
  
@@ -94,7 +94,7 @@ index e334ad2ec..06ad5c78a 100644
  # Check whether user wants to use ldns
  LDNS_MSG="no"
  AC_ARG_WITH(ldns,
-@@ -5806,6 +5862,7 @@ echo "                       PAM support: $PAM_MSG"
+@@ -5960,6 +6016,7 @@ echo "                       PAM support: $PAM_MSG"
  echo "                   OSF SIA support: $SIA_MSG"
  echo "                 KerberosV support: $KRB5_MSG"
  echo "                   SELinux support: $SELINUX_MSG"
@@ -103,10 +103,10 @@ index e334ad2ec..06ad5c78a 100644
  echo "                   libldns support: $LDNS_MSG"
  echo "  Solaris process contract support: $SPC_MSG"
 diff --git a/sshd-session.c b/sshd-session.c
-index 7d8498a88..c171c8923 100644
+index 7416e9632..5bc64f3c2 100644
 --- a/sshd-session.c
 +++ b/sshd-session.c
-@@ -109,6 +109,13 @@
+@@ -96,6 +96,13 @@
  #include "srclimit.h"
  #include "dh.h"
  
@@ -120,7 +120,7 @@ index 7d8498a88..c171c8923 100644
  /* Re-exec fds */
  #define REEXEC_DEVCRYPTO_RESERVED_FD	(STDERR_FILENO + 1)
  #define REEXEC_CONFIG_PASS_FD		(STDERR_FILENO + 2)
-@@ -1237,6 +1244,24 @@ main(int ac, char **av)
+@@ -1188,6 +1195,24 @@ main(int ac, char **av)
  #ifdef SSH_AUDIT_EVENTS
  	audit_connection_from(remote_ip, remote_port);
  #endif
@@ -146,7 +146,7 @@ index 7d8498a88..c171c8923 100644
  	rdomain = ssh_packet_rdomain_in(ssh);
  
 diff --git a/sshd.8 b/sshd.8
-index 08ebf53a1..464d402f6 100644
+index 7fbca776a..1cec2fd2c 100644
 --- a/sshd.8
 +++ b/sshd.8
 @@ -925,6 +925,12 @@ the user's home directory becomes accessible.

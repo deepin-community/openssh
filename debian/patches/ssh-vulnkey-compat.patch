@@ -1,4 +1,4 @@
-From 3e3094331c64231cc7b4f92d01e72550730c5b78 Mon Sep 17 00:00:00 2001
+From 79df21fcb0548e8b0a32a763a31c491226c7d7ec Mon Sep 17 00:00:00 2001
 From: Colin Watson <cjwatson@ubuntu.com>
 Date: Sun, 9 Feb 2014 16:09:50 +0000
 Subject: Accept obsolete ssh-vulnkey configuration options
@@ -8,19 +8,19 @@ Nearly six years later, we no longer need to continue carrying the bulk
 of that patch, but we do need to avoid failing when the associated
 configuration options are still present.
 
-Last-Update: 2014-02-09
+Last-Update: 2026-07-06
 
 Patch-Name: ssh-vulnkey-compat.patch
 ---
  readconf.c | 1 +
- servconf.c | 1 +
+ servconf.h | 1 +
  2 files changed, 2 insertions(+)
 
 diff --git a/readconf.c b/readconf.c
-index ac94e58b5..2b6f2c1e3 100644
+index b360f1f3c..280ba013a 100644
 --- a/readconf.c
 +++ b/readconf.c
-@@ -199,6 +199,7 @@ static struct {
+@@ -185,6 +185,7 @@ static struct {
  	{ "fallbacktorsh", oDeprecated },
  	{ "globalknownhostsfile2", oDeprecated },
  	{ "rhostsauthentication", oDeprecated },
@@ -28,15 +28,15 @@ index ac94e58b5..2b6f2c1e3 100644
  	{ "userknownhostsfile2", oDeprecated },
  	{ "useroaming", oDeprecated },
  	{ "usersh", oDeprecated },
-diff --git a/servconf.c b/servconf.c
-index 03b4960e0..d2025592a 100644
---- a/servconf.c
-+++ b/servconf.c
-@@ -702,6 +702,7 @@ static struct {
- 	{ "x11uselocalhost", sX11UseLocalhost, SSHCFG_ALL },
- 	{ "xauthlocation", sXAuthLocation, SSHCFG_GLOBAL },
- 	{ "strictmodes", sStrictModes, SSHCFG_GLOBAL },
-+	{ "permitblacklistedkeys", sDeprecated, SSHCFG_GLOBAL },
- 	{ "permitemptypasswords", sEmptyPasswd, SSHCFG_ALL },
- 	{ "permituserenvironment", sPermitUserEnvironment, SSHCFG_GLOBAL },
- 	{ "uselogin", sDeprecated, SSHCFG_GLOBAL },
+diff --git a/servconf.h b/servconf.h
+index c4ce9dd43..0480d3b87 100644
+--- a/servconf.h
++++ b/servconf.h
+@@ -244,6 +244,7 @@ SSHCONF_DEPRECATE(RHostsAuthentication, SSHCFG_GLOBAL, SSHCONF_DEPRECATED) \
+ SSHCONF_DEPRECATE(RhostsRSAAuthentication, SSHCFG_ALL, SSHCONF_DEPRECATED) \
+ SSHCONF_DEPRECATE(RSAAuthentication, SSHCFG_ALL, SSHCONF_DEPRECATED) \
+ SSHCONF_DEPRECATE(CheckMail, SSHCFG_GLOBAL, SSHCONF_DEPRECATED) \
++SSHCONF_DEPRECATE(PermitBlacklistedKeys, SSHCFG_GLOBAL, SSHCONF_DEPRECATED) \
+ SSHCONF_DEPRECATE(UseLogin, SSHCFG_GLOBAL, SSHCONF_DEPRECATED) \
+ SSHCONF_DEPRECATE(VerifyReverseMapping, SSHCFG_GLOBAL, SSHCONF_DEPRECATED) \
+ SSHCONF_DEPRECATE(ReverseMappingCheck, SSHCFG_GLOBAL, SSHCONF_DEPRECATED) \

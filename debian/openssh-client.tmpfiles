@@ -1,1 +1,2 @@
 x /tmp/ssh-*
+z /usr/bin/ssh-agent 2755 root _ssh

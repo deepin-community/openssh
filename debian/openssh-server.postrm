@@ -25,10 +25,6 @@ case $1 in
 		fi
 		rm -f /etc/ssh/sshd_not_to_be_run
 		[ ! -d /etc/ssh ] || rmdir --ignore-fail-on-non-empty /etc/ssh
-
-		if command -v deluser >/dev/null 2>&1; then
-			deluser --quiet sshd > /dev/null || true
-		fi
 		;;
 esac
 

@@ -33,7 +33,7 @@ make -C "$tmp/regress" \
 	TEST_SSH_PLINK=/usr/bin/plink \
 	TEST_SSH_PUTTYGEN=/usr/bin/puttygen \
 	TEST_SSH_CONCH=/usr/bin/conch3 \
-	TEST_SSH_DROPBEAR=/usr/bin/dropbear \
+	TEST_SSH_DROPBEAR=/usr/sbin/dropbear \
 	TEST_SSH_DROPBEARKEY=/usr/bin/dropbearkey \
 	TEST_SSH_DROPBEARCONVERT=/usr/bin/dropbearconvert \
 	TEST_SSH_DBCLIENT=/usr/bin/dbclient \
