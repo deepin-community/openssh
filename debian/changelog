@@ -1,3 +1,9 @@
+openssh (1:10.0p1-7+deb13u4deepin7) unstable; urgency=medium
+
+  * fix(cve): CVE-2026-60000
+
+ -- deepin-ci-robot <packages@deepin.org>  Tue, 21 Jul 2026 05:07:26 +0800
+
 openssh (1:10.0p1-7+deb13u4deepin6) unstable; urgency=medium
 
   * fix(cve): CVE-2026-60001
