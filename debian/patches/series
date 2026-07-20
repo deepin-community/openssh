@@ -48,3 +48,4 @@ add-sm-support.patch
 uniontech-fix-duplicate-loginmsg.patch
 CVE-2026-59996.patch
 CVE-2026-59997.patch
+CVE-2026-59999.patch
