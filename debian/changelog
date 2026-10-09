@@ -4,6 +4,12 @@ openssh (1:10.0p1-7+deb13u4deepin13) unstable; urgency=medium
     "restrict" keyword apply correctly to tunnel forwarding   Upstream:
     https://github.com/openssh/openssh-
     portable/commit/d322f2ccf7da095ce94d1d99cb563246f61487b0
+  * fix(cve): CVE-2026-106555 (unknown) - upstream: Reset GSSAPI client
+    state before authentication   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/670510d1e190b0f4e47066f24498c04ada1da0f0.patch,https
+    ://github.com/openssh/openssh-
+    portable/commit/6f9cd19af05aa828d7778cfb047faaed1679e8b7.patch
 
  -- deepin-ci-robot <packages@deepin.org>  Wed, 16 Sep 2026 22:01:35 +0800
 
