@@ -18,6 +18,10 @@ openssh (1:10.0p1-7+deb13u4deepin13) unstable; urgency=medium
     authorized_keys "resrict" keyword   Upstream:
     https://github.com/openssh/openssh-
     portable/commit/991f1f31dde2797416acaf4319dbebe764446c6f
+  * fix(cve): CVE-2026-106589 (unknown) - disable features when post-
+    auth sshd runs as root   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/b37c095aa39bb2c01754673dec50a684a536db24
 
  -- deepin-ci-robot <packages@deepin.org>  Wed, 16 Sep 2026 22:01:35 +0800
 
