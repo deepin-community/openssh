@@ -35,6 +35,10 @@ openssh (1:10.0p1-7+deb13u4deepin13) unstable; urgency=medium
     dictionary coder to avoid a potential side-channel leak   Upstream:
     https://github.com/openssh/openssh-
     portable/commit/1d5340fce24526719e32aebc4c721fc228182ace.patch
+  * fix(cve): CVE-2026-106585 (unknown) - upstream: Check that
+    compressed payloads don't inflate beyond the maximum payload length
+    Upstream: https://github.com/openssh/openssh-
+    portable/commit/e0f85d83ccc15b1b218fa8a000fc29a2e3d2defd
 
  -- deepin-ci-robot <packages@deepin.org>  Wed, 16 Sep 2026 22:01:35 +0800
 
