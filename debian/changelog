@@ -22,6 +22,10 @@ openssh (1:10.0p1-7+deb13u4deepin13) unstable; urgency=medium
     auth sshd runs as root   Upstream:
     https://github.com/openssh/openssh-
     portable/commit/b37c095aa39bb2c01754673dec50a684a536db24
+  * fix(cve): CVE-2026-106587 (unknown) - upstream: Correctly handle
+    some options that accept "none"   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/526fd2771342f36142099bec82c49ce0457c5016.patch
 
  -- deepin-ci-robot <packages@deepin.org>  Wed, 16 Sep 2026 22:01:35 +0800
 
