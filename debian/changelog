@@ -1,3 +1,51 @@
+openssh (1:10.0p1-7+deb13u4deepin13) unstable; urgency=medium
+
+  * fix(cve): CVE-2026-73283 (low) - upstream: make authorized_keys
+    "restrict" keyword apply correctly to tunnel forwarding   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/d322f2ccf7da095ce94d1d99cb563246f61487b0
+  * fix(cve): CVE-2026-106555 (unknown) - upstream: Reset GSSAPI client
+    state before authentication   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/670510d1e190b0f4e47066f24498c04ada1da0f0.patch,https
+    ://github.com/openssh/openssh-
+    portable/commit/6f9cd19af05aa828d7778cfb047faaed1679e8b7.patch
+  * fix(cve): CVE-2026-106584 (unknown) - upstream: Correct handling of
+    DST when converting dates   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/aef20dfe30e68a469911a229b9117e7134766311
+  * fix(cve): CVE-2026-106586 (unknown) - upstream: Propagate
+    authorized_keys "resrict" keyword   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/991f1f31dde2797416acaf4319dbebe764446c6f
+  * fix(cve): CVE-2026-106589 (unknown) - disable features when post-
+    auth sshd runs as root   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/b37c095aa39bb2c01754673dec50a684a536db24
+  * fix(cve): CVE-2026-106587 (unknown) - upstream: Correctly handle
+    some options that accept "none"   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/526fd2771342f36142099bec82c49ce0457c5016.patch
+  * fix(cve): CVE-2026-106552 (unknown) - upstream: sftp: be stricter in
+    accepting paths returned by the server for SSH_FXP_REALPATH or
+    SSH2_FXP_READDIR replies   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/c07ea2180adebd6019a6ebdd89becb9d9f4b4897.patch
+  * fix(cve): CVE-2026-106582 (unknown) - upstream: Disable LZ77
+    dictionary coder to avoid a potential side-channel leak   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/1d5340fce24526719e32aebc4c721fc228182ace.patch
+  * fix(cve): CVE-2026-106585 (unknown) - upstream: Check that
+    compressed payloads don't inflate beyond the maximum payload length
+    Upstream: https://github.com/openssh/openssh-
+    portable/commit/e0f85d83ccc15b1b218fa8a000fc29a2e3d2defd
+  * fix(cve): CVE-2026-106583 (unknown) - upstream: Further restrict the
+    characters allowed in a command-line   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/0c4c9a7b320bd7ff61c4a2dc345cb2e27e9663b2
+
+ -- deepin-ci-robot <packages@deepin.org>  Wed, 16 Sep 2026 22:01:35 +0800
+
 openssh (1:10.0p1-7+deb13u4deepin12) unstable; urgency=medium
 
   * Rebuild with LTO enabled (dpkg vendor feature optimize/lto).
