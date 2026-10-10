@@ -14,6 +14,10 @@ openssh (1:10.0p1-7+deb13u4deepin13) unstable; urgency=medium
     DST when converting dates   Upstream:
     https://github.com/openssh/openssh-
     portable/commit/aef20dfe30e68a469911a229b9117e7134766311
+  * fix(cve): CVE-2026-106586 (unknown) - upstream: Propagate
+    authorized_keys "resrict" keyword   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/991f1f31dde2797416acaf4319dbebe764446c6f
 
  -- deepin-ci-robot <packages@deepin.org>  Wed, 16 Sep 2026 22:01:35 +0800
 
