@@ -26,6 +26,11 @@ openssh (1:10.0p1-7+deb13u4deepin13) unstable; urgency=medium
     some options that accept "none"   Upstream:
     https://github.com/openssh/openssh-
     portable/commit/526fd2771342f36142099bec82c49ce0457c5016.patch
+  * fix(cve): CVE-2026-106552 (unknown) - upstream: sftp: be stricter in
+    accepting paths returned by the server for SSH_FXP_REALPATH or
+    SSH2_FXP_READDIR replies   Upstream:
+    https://github.com/openssh/openssh-
+    portable/commit/c07ea2180adebd6019a6ebdd89becb9d9f4b4897.patch
 
  -- deepin-ci-robot <packages@deepin.org>  Wed, 16 Sep 2026 22:01:35 +0800
 
