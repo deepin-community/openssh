@@ -43,6 +43,9 @@ openssh (1:10.0p1-7+deb13u4deepin13) unstable; urgency=medium
     characters allowed in a command-line   Upstream:
     https://github.com/openssh/openssh-
     portable/commit/0c4c9a7b320bd7ff61c4a2dc345cb2e27e9663b2
+  * fix(cve): CVE-2026-123158 (high) - avoid password authn bypass
+    Upstream: https://github.com/openssh/openssh-
+    portable/commit/4353fdc43ef646c43a8dda7025cc1a898caf1482
 
  -- deepin-ci-robot <packages@deepin.org>  Wed, 16 Sep 2026 22:01:35 +0800
 
